@@ -37,9 +37,14 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
  
   private Client client;
   private int clientColor = Constants.RED;
+  private String nickname = "";
   
   private JPanel boardPanel = null;
   private BoardApplet boardApplet = null;
+  
+  private JToolBar tbStatus = new JToolBar("Status");
+  private JLabel lbPlayer = new JLabel();
+  private JLabel lbStatus = new JLabel();
   
   private JPanel pnDice = new JPanel();
   private JButton btDice = new JButton(Toolbox.loadDiceIcon(this.getClass()));
@@ -68,11 +73,12 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   	
   	try {
 		clientColor = client.getColor();
+		nickname = client.getNickname();
 	} catch (RemoteException e1) {
 		//e1.printStackTrace();
 	}
 	
-    this.setSize(772,700);
+    this.setSize(772,643);
     //this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     this.setResizable(false);
     //this.setState(Frame.ICONIFIED);
@@ -89,7 +95,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     boardApplet.init();
     boardApplet.start();
     boardPanel.add(boardApplet, BorderLayout.CENTER);
- 
+    
     pnDice.setBounds(new Rectangle(525, 42, 235, 205));
     pnDice.setLayout(null);
     pnDice.setBorder(new TitledBorder("  Würfel  "));
@@ -109,7 +115,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     pnDice.add(diceApplet, null);
 
     pnPieces.setBorder(new TitledBorder("  Spielsteine  "));
-    pnPieces.setBounds(new Rectangle(525, 252, 235, 125));
+    pnPieces.setBounds(new Rectangle(525, 257, 235, 125));
     pnPieces.setLayout(null);
        
        lbPiece1 = new JLabel(Toolbox.loadImageIcon(clientColor + "1.gif", this.getClass()));   
@@ -141,7 +147,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
        lbPiece4.addMouseListener(this);
 
        btMove.setBounds(new Rectangle(45, 90, 145, 25));
-       btMove.setText("Rücken");
+       btMove.setText("Ziehen");
        btMove.setActionCommand("move");
        btMove.addActionListener(this);
        
@@ -152,25 +158,53 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     pnPieces.add(btMove, null);
     
     pnRadio.setBorder(new TitledBorder("  Radio  "));
-    pnRadio.setBounds(new Rectangle(8, 567, 512, 72));
+    pnRadio.setBounds(new Rectangle(525, 392, 235, 170));
     pnRadio.setLayout(null);
     
-       spRadio.setBounds(new Rectangle(10, 20, 492, 42));
+       spRadio.setBounds(new Rectangle(5, 20, 225, 145));
        taRadio.setEditable(false);
 
     pnRadio.add(spRadio, null);
+
+    tbStatus.setBounds(new Rectangle(0,567, 772, 20));
+    tbStatus.setBorderPainted(true);
+    tbStatus.setEnabled(false);
+    
+    	JLabel l = new JLabel();
+    	l.setFont(new java.awt.Font("Dialog", 1, 11));
+    	l.setText("Spieler ");
+    tbStatus.add(l);
+    	
+    	lbPlayer.setForeground(colors[clientColor]);
+    	lbPlayer.setText(nickname);
+    	lbPlayer.setFont(new java.awt.Font("Dialog", 0, 11));
+       	tbStatus.add(lbPlayer);
+    
+    tbStatus.addSeparator();
+       	
+       	l = new JLabel();
+    	l.setFont(new java.awt.Font("Dialog", 1, 11));
+    	l.setText("Status ");
+    tbStatus.add(l);
+       	
+    	lbStatus.setForeground(colors[Constants.RED]);
+    	lbStatus.setText("Inaktiv");
+    	lbStatus.setFont(new java.awt.Font("Dialog", 0, 11));
+    tbStatus.add(lbStatus);
     
     this.getContentPane().add(boardPanel, null);
     this.getContentPane().add(pnPieces, null);
     this.getContentPane().add(pnDice, null);
     this.getContentPane().add(pnRadio, null);
+    this.getContentPane().add(tbStatus, null);
     
     updateComponentEnabling();
     setVisible(true);
+    
   }
   public static void main(String[] args) {
     
-  	GameFrame f1, f2;
+  	GameFrame f1, f2, f3;
     
 	try {
 		
@@ -188,6 +222,14 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		c.setClientListener(f2);
 		f2.setLocation(100,100);
 		
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e1){}
+		
+		c = s.newClient("Client");
+		f3 = new GameFrame(c);
+		c.setClientListener(f3);
+		f3.setLocation(200,200);
 		
 		
 	} catch (RemoteException e) {
@@ -463,6 +505,19 @@ public void gameIsOver() {
  */
 public void enablingChanged() {
 	updateComponentEnabling();
+	
+	try {
+		if (client.getStatus() == Constants.INACTIVE){
+			lbStatus.setForeground(colors[Constants.RED]);
+			lbStatus.setText("Inaktiv");
+		}else{
+			lbStatus.setForeground(colors[Constants.GREEN]);
+			lbStatus.setText("Aktiv");
+		}
+	} catch (RemoteException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
 }
 /* (non-Javadoc)
  * @see gui.ClientListener#showMessage()

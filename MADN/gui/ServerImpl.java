@@ -49,7 +49,7 @@ public class ServerImpl extends ClientImpl implements Server {
 			if (!busy){
 				c = new ClientImpl(this, color, nickname);
 				clients[color] = c;
-				sendRadioMessage("Spieler " + nickname + " [" + Toolbox.colorToString(color) + "] hat sich angemeldet.");
+				sendRadioMessage(nickname + " [" + Toolbox.colorToString(color) + "] hat sich angemeldet.");
 			} else {
 				// TODO Exception: Spiel läuft
 			}

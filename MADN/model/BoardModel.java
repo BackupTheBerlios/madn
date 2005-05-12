@@ -241,6 +241,17 @@ public class BoardModel {
 
 	}
 	
+	private int countPiecesAtHomeZone (int color){
+		int cnt=0;
+		
+		for (int i=0; i<4; i++){
+			if (pieces[color][i].isAtHome()){
+				cnt++;				
+			}
+		}		
+		return cnt;
+	}
+	
 	private boolean hasPiecesAtStartingPoint(int color){
 		boolean result = false;
 		
@@ -280,8 +291,34 @@ public class BoardModel {
 		return exists;
 	}
 	
+	private boolean hasPieceAtSpace(int color, int pos){
+		boolean result = false;
+		
+		for (int i=0; i<4; i++){
+			if (pieces[color][i].getRealPosition() == pos){
+				result = true;
+				break;
+			}
+		}
+		
+		return result;
+	}
+	
 	public boolean isAllowedToDice3Times (int color){
-		return (!hasPiecesOnTrack(color) && hasPiecesAtStartingPoint(color));
+		boolean isAllowed = true;
+		
+		if (!hasPiecesOnTrack(color) && hasPiecesAtStartingPoint(color)){
+			for (int i=43; i > 43-countPiecesAtHomeZone(color); i--){
+				if (!hasPieceAtSpace(color, i)){
+					isAllowed = false;
+					break;
+				}
+			}
+		}else{
+			isAllowed = false;
+		}
+		
+		return isAllowed;
 	}
 	
 	public boolean isGameOver(){

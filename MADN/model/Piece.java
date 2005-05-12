@@ -40,6 +40,10 @@ public class Piece {
 		return ((position >= 0) && (position < 40));
 	}
 	
+	public boolean isAtHome(){
+		return ((position >= 40) && (position < 44));
+	}
+	
 	public boolean hasFinished(){
 		return (position >= 40);
 	}
