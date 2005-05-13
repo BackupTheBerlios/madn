@@ -18,7 +18,6 @@ import model.Piece;
  */
 public interface ClientListener extends EventListener {
 	public void boardConstellationChanged(Piece[][] pieces);
-	public void gameIsOver();
 	public void enablingChanged ();
 	public void showMessage (String msg);
 	public void addRadioMessage (String msg);

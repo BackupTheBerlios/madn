@@ -24,7 +24,7 @@ public class Piece {
 		this.color = color;
 		this.id = id;
 		this.position = position;
-		this.moveable = true;
+		this.moveable = false;
 		this.evalErrorCode = -1;
 	}
 	

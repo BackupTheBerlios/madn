@@ -52,6 +52,34 @@ public class Toolbox {
 	}
 
 	/**
+	 * Laden eines Tip-Icons(12*12).
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene ImageIcon.
+	 */
+	static public ImageIcon loadPlayerIcon(Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images","player.jpg", clazz);
+		  if (img != null)
+			  return  new ImageIcon(img);
+	  }catch (IOException e){};
+		return null;
+	}	
+	
+	/**
+	 * Laden eines Tip-Icons(12*12).
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene ImageIcon.
+	 */
+	static public ImageIcon loadTipIcon(Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images","tip.gif", clazz);
+		  if (img != null)
+			  return  new ImageIcon(img);
+	  }catch (IOException e){};
+		return null;
+	}	
+	
+	/**
 	 * Laden eines Tip-Icons(24*24).
 	 * @param clazz = Class von einer Componente.
 	 * @return Das geladene ImageIcon.

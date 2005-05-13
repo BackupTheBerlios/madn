@@ -19,7 +19,7 @@ public interface Client extends Remote {
 
 	public int getColor() throws RemoteException;
 	public void refresh(boolean all) throws RemoteException;
-	public int throwTheDice() throws RemoteException;
+	public void throwTheDice() throws RemoteException;
 	public void setServer(Server server) throws RemoteException;
 	public Server getServer() throws RemoteException;
 	public void recieveRadioMessage (String msg) throws RemoteException;
@@ -31,4 +31,8 @@ public interface Client extends Remote {
 	public void setAttempts(int attempts) throws RemoteException;
 	public void decrementAttempts() throws RemoteException;
 	public int getAttempts() throws RemoteException;
+	public boolean hasAttemptsLeft () throws RemoteException;
+	public int getDiceResult () throws RemoteException;
+	public void setDiceResult (int dice) throws RemoteException;
+	public boolean existsServer() throws RemoteException;
 }

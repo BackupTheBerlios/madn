@@ -30,9 +30,7 @@ public class BoardModel {
 	private void initialize(){
 		
 		for (int color=Constants.RED/*0*/ ; color<=Constants.GREEN/*3*/ ; color++){
-			for (int id=0 ; id<4 ; id++){
-				pieces[color][id] = new Piece(color, id);
-			}
+			reset(color);
 		}
 		
 		for (int i=0 ; i<40 ; i++){
@@ -44,6 +42,14 @@ public class BoardModel {
 	
 	public void reset(){
 		initialize();
+	}
+	
+	public void reset(int color){
+		if ((color>=Constants.RED)&&(color<=Constants.GREEN)){
+			for (int id=0 ; id<4 ; id++){
+				pieces[color][id] = new Piece(color, id);
+			}
+		}
 	}
 	
 	private void evaluate (int color, int distance){
@@ -159,14 +165,8 @@ public class BoardModel {
 		if ( (color>=Constants.RED) && (color<=Constants.GREEN) && (id>=0) && (id<=3) ){
 			if ((distance >= 0) && (distance <= 6)){//evtl. größere Distanzen als 6 zulässig?!
 				
-				// Setze Zugfähigkeitsstatus der Steine einer bestimmten Farbe zurück
-				resetMoveableStatus(color);
-				
-				// Bestimme Zugfähigkeit der Spielsteine einer bestimmten Farbe
-				evaluate(color, distance);
-				
 				// Führe Zug durch oder werfe Exception
-				if (existsMoveablePiece(color)){
+				if (existsMoveablePiece(color, distance)){
 					Piece p = pieces[color][id];
 					if (p.isMoveable()){
 						newPosition = move(p, distance);
@@ -278,8 +278,14 @@ public class BoardModel {
 		return result;
 	}
 	
-	private boolean existsMoveablePiece (int color){
+	public boolean existsMoveablePiece (int color, int distance){
 		boolean exists = false;
+		
+		// Setze Zugfähigkeitsstatus der Steine einer bestimmten Farbe zurück
+		resetMoveableStatus(color);
+		
+		// Bestimme Zugfähigkeit der Spielsteine einer bestimmten Farbe
+		evaluate(color, distance);
 		
 		for (int i=0; i<4; i++){
 			if (pieces[color][i].isMoveable()){

@@ -20,7 +20,7 @@ public interface Server extends Remote {
 	
 	public Client newClient(String nickName) throws RemoteException;
 	
-	public void removeClient(Client c) throws RemoteException;
+	public void removeClient(int id) throws RemoteException;
 	
 	public void reset() throws RemoteException;
 	
@@ -28,7 +28,7 @@ public interface Server extends Remote {
 	
 	public boolean isActiveClientAllowedToDice3Times() throws RemoteException;
 	
-	public int dice(int client) throws RemoteException;
+	public void dice(int client) throws RemoteException;
 	
 	public void sendRadioMessage(String msg) throws RemoteException;
 	

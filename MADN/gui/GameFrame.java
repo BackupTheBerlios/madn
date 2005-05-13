@@ -18,6 +18,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -35,7 +37,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   
   private HashMap streams = new HashMap();	
  
-  private Client client;
+  protected Client client;
   private int clientColor = Constants.RED;
   private String nickname = "";
   
@@ -45,6 +47,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   private JToolBar tbStatus = new JToolBar("Status");
   private JLabel lbPlayer = new JLabel();
   private JLabel lbStatus = new JLabel();
+  private JLabel lbTip = new JLabel();
   
   private JPanel pnDice = new JPanel();
   private JButton btDice = new JButton(Toolbox.loadDiceIcon(this.getClass()));
@@ -64,7 +67,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   private JScrollPane spRadio = new JScrollPane(taRadio);
   
   private int selectedPiece = -1;
-  private int dice = 0;
+  //private int dice = 0;
   
   public GameFrame(Client client) {
     
@@ -78,10 +81,39 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		//e1.printStackTrace();
 	}
 	
-    this.setSize(772,643);
-    //this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	int xSize = 772, ySize = 643;
+	
+    Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+	d.width = (d.width - xSize)/2;
+	d.height =(d.height-ySize)/2;
+	this.setBounds( d.width, d.height, xSize, ySize);
+	
     this.setResizable(false);
-    //this.setState(Frame.ICONIFIED);
+    this.addWindowListener(
+    		
+    		new WindowAdapter(){
+    			
+    			public void windowClosing(WindowEvent event){
+    				
+    				GameFrame frame = (GameFrame)event.getWindow();
+    				
+    				try {
+    					
+    					if (frame.client.existsServer()){ 
+    						frame.client.getServer().removeClient(frame.client.getColor());
+    					}
+    					
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+    				
+    				frame.setVisible(false);
+    				frame.dispose();
+    				System.exit(0);
+    			}	   			
+    		}
+    	);
     this.getContentPane().setLayout(null);
     this.setJMenuBar(createMenuBar());
     
@@ -170,28 +202,22 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     tbStatus.setBorderPainted(true);
     tbStatus.setEnabled(false);
     
-    	JLabel l = new JLabel();
-    	l.setFont(new java.awt.Font("Dialog", 1, 11));
-    	l.setText("Spieler ");
-    tbStatus.add(l);
-    	
+    	lbPlayer.setIcon(Toolbox.loadPlayerIcon(this.getClass()));
     	lbPlayer.setForeground(colors[clientColor]);
-    	lbPlayer.setText(nickname);
+    	lbPlayer.setText(nickname + " [" + ((client instanceof Server)?"Server":"Client") + "]");
     	lbPlayer.setFont(new java.awt.Font("Dialog", 0, 11));
        	tbStatus.add(lbPlayer);
     
     tbStatus.addSeparator();
        	
-       	l = new JLabel();
-    	l.setFont(new java.awt.Font("Dialog", 1, 11));
-    	l.setText("Status ");
-    tbStatus.add(l);
-       	
-    	lbStatus.setForeground(colors[Constants.RED]);
-    	lbStatus.setText("Inaktiv");
-    	lbStatus.setFont(new java.awt.Font("Dialog", 0, 11));
-    tbStatus.add(lbStatus);
-    
+   		lbStatus.setFont(new java.awt.Font("Dialog", 1, 11));
+    	tbStatus.add(lbStatus);
+  
+    tbStatus.addSeparator();
+         
+    	lbTip.setFont(new java.awt.Font("Dialog", 1, 11));
+       	tbStatus.add(lbTip);	
+    	
     this.getContentPane().add(boardPanel, null);
     this.getContentPane().add(pnPieces, null);
     this.getContentPane().add(pnDice, null);
@@ -199,6 +225,9 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     this.getContentPane().add(tbStatus, null);
     
     updateComponentEnabling();
+    updateStatusBar();
+    
+    
     setVisible(true);
     
   }
@@ -208,28 +237,25 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     
 	try {
 		
-		Server s = new ServerImpl("Server");
+		Server s = new ServerImpl("Mario");
 		f1 = new GameFrame((Client)s);
-		f1.setLocation(0,0);
 		((Client)s).setClientListener(f1);
 		
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e1){}
 		
-		Client c = s.newClient("Client");
+		Client c = s.newClient("Robert");
 		f2 = new GameFrame(c);
 		c.setClientListener(f2);
-		f2.setLocation(100,100);
 		
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e1){}
 		
-		c = s.newClient("Client");
+		c = s.newClient("Waldemar");
 		f3 = new GameFrame(c);
 		c.setClientListener(f3);
-		f3.setLocation(200,200);
 		
 		
 	} catch (RemoteException e) {
@@ -287,6 +313,23 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     return mb;
   }
 
+  private void showTip(String tip, int millis){
+  	int delay = millis; //Millisekunden
+    
+  	lbTip.setIcon(Toolbox.loadTipIcon(this.getClass()));
+  	lbTip.setText(tip);
+  	
+  	ActionListener taskPerformer = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            ((Timer)e.getSource()).stop();
+          	lbTip.setIcon(null);
+          	lbTip.setText("");            
+        }
+    };
+    
+    new Timer(delay, taskPerformer).start();
+  }
+  
   private void setCtrlAccelerator(JMenuItem mi, char acc){
     KeyStroke ks = KeyStroke.getKeyStroke(acc, Event.CTRL_MASK);
     mi.setAccelerator(ks);
@@ -294,8 +337,28 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
   private void updateComponentEnabling(){
   	try {
-		btMove.setEnabled(client.getStatus() > Constants.INACTIVE);
-		btDice.setEnabled((client.getStatus() == Constants.ACTIVE) && client.getAttempts() > 0);
+  		btMove.setEnabled(client.getStatus() == Constants.ACTIVE_MOVE);
+		btDice.setEnabled(client.getStatus() == Constants.ACTIVE_DICE);
+	} catch (RemoteException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+  }
+  
+  private void updateStatusBar(){
+	try {
+		
+		if (client.getStatus() == Constants.INACTIVE){
+			lbStatus.setForeground(colors[Constants.RED]);
+			lbStatus.setText("Inaktiv");
+		}else{
+			lbStatus.setForeground(colors[Constants.GREEN]);
+			if (client.getStatus() == Constants.ACTIVE_DICE)
+				lbStatus.setText("Würfeln");
+			else
+				lbStatus.setText("Ziehen");
+		}
+		
 	} catch (RemoteException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
@@ -318,7 +381,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
         	boardApplet.destroy();
         }
         
-    	this.dispose();
+    	this.processEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     
     }else if (cmd.equals("showRules")){
 
@@ -326,23 +389,26 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
     }else if (cmd.equals("dice")){
        	try {
-			dice = client.throwTheDice();
-			tfDiceResult.setText("Würfelergebnis: " + dice);
-			btDice.setEnabled(client.getAttempts()>0);
+       		
+			client.throwTheDice();
+			tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
+			
 		} catch (RemoteException e1) {
 			// e1.printStackTrace();
 			tfDiceResult.setText("Würfelergebnis: n.a.");
 		}
     }else if (cmd.equals("move")){
-    	if ((selectedPiece >= 0)&&(selectedPiece < 4) && (dice > 0)){
+    	if ((selectedPiece >= 0)&&(selectedPiece < 4)){
     		try {
-				
-				client.getServer().move(client.getColor(), selectedPiece, dice);
-				dice = 0;
-				tfDiceResult.setText("");
+				int dice = client.getDiceResult();
+				if (dice > 0){
+					client.getServer().move(client.getColor(), selectedPiece, dice);
+					tfDiceResult.setText("");
+				}else{
+					showTip("Noch nicht gewürfelt?!", 5000);
+				}
     		} catch (InvalidMoveException e1) {
 					if (e1.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
-						dice = 0;
 						tfDiceResult.setText("");
 					}
 			} catch (RemoteException e2) {
@@ -350,7 +416,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 				e2.printStackTrace();
 			}
     	}else{
-    		// TODO Message: kein Spielstein ausgewählt
+    		showTip("Spielstein ausgewählt?!", 5000);
     	}
     }
   }
@@ -380,8 +446,6 @@ public Enumeration getApplets() {
 	return null;
 }
 
-public void showDocument(URL url) {}
-
 public void showDocument(URL url, String target) {}
 
 public void showStatus(String status) {}
@@ -390,6 +454,7 @@ public void setStream(String key, InputStream stream) throws IOException {
 	streams.put(key, stream);
 	
 }
+public void showDocument(URL url) {}
 
 public InputStream getStream(String key) {
 	if (!streams.containsKey(key)){
@@ -491,39 +556,12 @@ public void mouseExited(MouseEvent e) {
  */
 public void boardConstellationChanged(Piece[][] pieces) {
 	boardApplet.actualizePawnPositions(pieces);
-	
 }
-/* (non-Javadoc)
- * @see gui.ClientListener#gameIsOver()
- */
-public void gameIsOver() {
-	// TODO Auto-generated method stub
-	
-}
-/* (non-Javadoc)
- * @see gui.ClientListener#enablingChanged()
- */
+
 public void enablingChanged() {
-	updateComponentEnabling();
 	
-	try {
-		if (client.getStatus() == Constants.INACTIVE){
-			lbStatus.setForeground(colors[Constants.RED]);
-			lbStatus.setText("Inaktiv");
-		}else{
-			lbStatus.setForeground(colors[Constants.GREEN]);
-			lbStatus.setText("Aktiv");
-		}
-	} catch (RemoteException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-}
-/* (non-Javadoc)
- * @see gui.ClientListener#showMessage()
- */
-public void showMessage() {
-	// TODO Auto-generated method stub
+	updateComponentEnabling();
+	updateStatusBar();
 	
 }
 

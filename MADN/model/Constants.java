@@ -32,8 +32,8 @@ public final class Constants {
 	public static int NO_MOVEABLE_PIECE = 9;
 	
 	// Client-Stati
-	public static int INACTIVE = 0; // => nichts
-	public static int ACTIVE_RESTRICTED = 1; // => nicht würfeln, Figur wählen, rücken
-	public static int ACTIVE = 2; // => würfeln, Figur wählen, rücken 
+	public static int INACTIVE = 0;
+	public static int ACTIVE_DICE = 1; // => Würfeln
+	public static int ACTIVE_MOVE = 2; // => Ziehen 
 
 }

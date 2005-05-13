@@ -60,8 +60,17 @@ public class ServerImpl extends ClientImpl implements Server {
 		return c;
 	}
 	
-	public boolean existsClient (Client c){
-		return true;
+	private void removeServer (){
+		for (int i=0; i<clients.length; i++){
+			if (clients[i] != null){
+				try {
+					clients[i].setServer(null);
+				} catch (RemoteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	public void removeClient (int id){
@@ -70,11 +79,45 @@ public class ServerImpl extends ClientImpl implements Server {
 				try {
 					// Serververbindung kappen
 					clients[id].setServer(null);
+					
 					// Farbe wieder verfügbar machen
 					colors.add(new Integer(id));
-					// Aus Client-Liste löschen
-					clients[id] = null;
-					// TODO: Spielfarbe auf BoardModel zurücksetzen
+					
+					// Spielfarbe auf BoardModel zurücksetzen
+					bm.reset(id);
+					
+					if (clients[id] instanceof Server){
+						
+						// Message an alle Spieler
+						sendRadioMessage("Das Spiel kann nicht fortgesetzt werden!\nDer Server wurde beendet!");
+						// Alle Spieler inaktiv setzen
+						if (activeClient != -1)
+							clients[activeClient].setStatus(Constants.INACTIVE);
+						// Server aus Client-Liste löschen
+						clients[id] = null;
+						// Aktualisiere alle Clients
+						refreshClients(true);
+						// Entferne Server in allen Clients
+						removeServer();
+						
+					}else{
+						
+						// Message an alle Spieler
+						sendRadioMessage(clients[id].getNickname() + " [" + Toolbox.colorToString(id) + "] hat sich abgemeldet.");
+						
+						// Client aus Client-Liste löschen
+						clients[id] = null;
+						
+						// ggf. anderen Spieler aktivieren
+						if (id == activeClient){
+							setNextClientActive();
+							sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
+						}
+						
+						// Aktualisiere alle Clients
+						refreshClients(true);			
+					}
+					
 				} catch (RemoteException e) {
 					// TODO Exception: Client konnte nicht gelöscht werden
 					e.printStackTrace();
@@ -95,10 +138,6 @@ public class ServerImpl extends ClientImpl implements Server {
 	}
 	
 	
-	public void removeClient(Client c) throws RemoteException{
-		
-	}
-	
 	public void reset() throws RemoteException {
 		
 	}
@@ -107,46 +146,50 @@ public class ServerImpl extends ClientImpl implements Server {
 		
 		if (busy){
 			if (color == activeClient){
-				try {
-					bm.move(color, id, distance);
-					sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist mit Spielstein " + (id+1) + " gezogen.");
-					if (!bm.isGameOver()){
-						if (distance==6){
-							clients[activeClient].setStatus(Constants.ACTIVE);
-							resetActiveClientAttempts();
-							sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist abermals am Zug.");
-						}else{ 
-							setNextClientActive();
-							sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
-						}
-					}else{
-						clients[activeClient].setStatus(Constants.INACTIVE);
-						sendRadioMessage("Game Over!!! " + clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist der Gewinner.");
-						clients[activeClient].recieveMessage("Game Over!!!\nHerzlichen Glückwunsch Sie haben gewonnen.");
-						activeClient = -1;
-					}
-					refreshClients(true);
-				} catch (InvalidMoveException e) {
-					if (e.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
-						if (clients[activeClient].getAttempts() > 0){
-							clients[activeClient].recieveMessage("Mit dem aktuellen Würfelergebnis ist kein Zug möglich.\nWürfeln Sie noch einmal!");
+				if (clients[activeClient].getStatus() == Constants.ACTIVE_MOVE){
+					try {
+						bm.move(color, id, distance);
+						sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist mit Spielstein " + (id+1) + " gezogen.");
+						if (!bm.isGameOver()){
+							if (distance==6){
+								clients[activeClient].setStatus(Constants.ACTIVE_DICE);
+								resetActiveClientAttempts();
+								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist abermals am Zug.");
+							}else{ 
+								setNextClientActive();
+								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
+							}
 						}else{
-							sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] konnte nicht ziehen.");
-							setNextClientActive();
-							sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
+							clients[activeClient].setStatus(Constants.INACTIVE);
+							sendRadioMessage("Game Over!!! " + clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist der Gewinner.");
+							clients[activeClient].recieveMessage("Game Over!!!\nHerzlichen Glückwunsch Sie haben gewonnen.");
+							activeClient = -1;
 						}
-					}else{
-						clients[activeClient].setStatus(Constants.ACTIVE_RESTRICTED);
-						clients[activeClient].recieveMessage(e.getMessage());
+						refreshClients(true);
+					} catch (InvalidMoveException e) {
+						if (e.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
+							if (clients[activeClient].getAttempts() > 0){
+								clients[activeClient].recieveMessage("Mit dem aktuellen Würfelergebnis ist kein Zug möglich.\nWürfeln Sie noch einmal!");
+							}else{
+								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] konnte nicht ziehen.");
+								setNextClientActive();
+								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
+							}
+						}else{
+							//clients[activeClient].setStatus(Constants.ACTIVE_MOVE);
+							clients[activeClient].recieveMessage(e.getMessage());
+						}
+						refreshClients(false);
+						throw (e);
 					}
-					refreshClients(false);
-					throw (e);
+				}else{ // clients[activeClient].getStatus() == Constants.ACTIVE_MOVE
+					sendRadioMessage("Debug: Du bist nicht am Zug.");
 				}
-			}else{
+			}else{ // End: color == activeClient
 				sendRadioMessage("Debug: du bist nicht dran");
 				// TODO Exception: Anderer Spieler am Zug
 			}
-		}else{
+		}else{ // End: busy
 			sendRadioMessage("Debug: kein Spiel");
 			// TODO Exception: Es läuft kein Spiel
 		}
@@ -172,12 +215,18 @@ public class ServerImpl extends ClientImpl implements Server {
 	private void setNextClientActive() {
 		
 		try {
-			clients[activeClient].setStatus(Constants.INACTIVE);
-		
-			for (int i=activeClient+1; i<=activeClient+clients.length; i++){
+			
+			int tmpActive = activeClient;
+			activeClient = -1;
+			
+			if (clients[tmpActive] != null){
+				clients[tmpActive].setStatus(Constants.INACTIVE);
+			}
+					
+			for (int i=tmpActive+1; i<=tmpActive+clients.length; i++){
 				if (clients[i%4] != null){
 					activeClient = i%4;
-					clients[activeClient].setStatus(Constants.ACTIVE);
+					clients[activeClient].setStatus(Constants.ACTIVE_DICE);
 					resetActiveClientAttempts();
 					break;
 				}
@@ -208,16 +257,49 @@ public class ServerImpl extends ClientImpl implements Server {
 		}
 	}
 	
-	public int dice(int client) throws RemoteException {
-		int result = 0;
+	public void dice(int client) throws RemoteException {
+		
+		int distance = 0;
+		
 		if (client == activeClient){
-			result = bm.throwTheDice();
-			clients[client].decrementAttempts();
-			sendRadioMessage(clients[client].getNickname() + " [" + Toolbox.colorToString(clients[client].getColor()) + "] hat eine " + result + " gewüfelt.");
+			
+			if (clients[client].getStatus() == Constants.ACTIVE_DICE){
+				
+				// Würfeln
+				distance = bm.throwTheDice();
+				// Resultat Client mitteilen
+				clients[client].setDiceResult(distance);
+				// Würfelversuche dekrementieren
+				clients[client].decrementAttempts();
+				// Message: Würfelergebnis an alle Spieler
+				sendRadioMessage(clients[client].getNickname() + " [" + Toolbox.colorToString(clients[client].getColor()) + "] hat eine " + distance + " gewüfelt.");
+				
+				// Auswertung Wurfergebnis
+				if (bm.existsMoveablePiece(clients[client].getColor(), distance)){
+					// Spieler kann mit einer Figur ziehen
+					clients[client].setStatus(Constants.ACTIVE_MOVE);
+					// => Spieler muss Figur wählen und ziehen
+				}else{ 
+					if (!clients[client].hasAttemptsLeft()){
+						// Spieler kann nicht ziehen und hat keine Wurfversuche mehr => der Nächste bitte!
+						sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] konnte nicht ziehen.");
+						setNextClientActive();
+						sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");	
+					}
+				}
+				
+				// Aktualisiere Clients (nur Component-Enabling)
+				refreshClients(false);
+				
+			}else{
+				//	Exception: Nicht Würfeln sonderen Rücken
+			}
+		
 		}else{
 			// Exception: Anderer Spieler am Zug
 		}
-		return result;
+		
+		//return distance;
 	}
 	
 	public void sendRadioMessage(String msg) throws RemoteException {
@@ -243,7 +325,7 @@ public class ServerImpl extends ClientImpl implements Server {
 			clients[activeClient].setStatus(Constants.INACTIVE);
 		
 		activeClient = Constants.RED;
-		clients[activeClient].setStatus(Constants.ACTIVE);
+		clients[activeClient].setStatus(Constants.ACTIVE_DICE);
 		clients[activeClient].setAttempts(3);
 		busy = true;
 		

@@ -23,12 +23,14 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 	private String nickName = "";
 	//	Spielsteinfarbe und Client-ID auf Server
 	private int color; 
-	// Status => TriState-Logik: 0 = Inaktiv, 1 = eingeschränkt Aktiv (Spielstein wählen + rücken), 2 = Aktiv (würfeln, wählen, rücken) 
+	// Status => TriState-Logik: 0 = Inaktiv, 1 = Würfeln (Aktiv), 2 = Ziehen (Aktiv) 
 	private int status = 0; 
 	// Listener => GameFrame
 	private ClientListener listener = null;
 	//Anzahl der Würfe
 	private int attempts = 0;
+	// Würfelergebnis
+	private int dice = 0;
 	
 	public ClientImpl(Server server, int color, String nickName) throws RemoteException{
 		this(color, nickName);
@@ -53,7 +55,7 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 		return server;
 	}
 	
-	public void refresh(boolean all) throws RemoteException{
+	public void refresh(boolean animationInclusive) throws RemoteException{
 		/*
 		 * TODO:
 		 * - Spielfeldkostellation aktualisieren (all = true)
@@ -61,7 +63,7 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 		 * - Aktiver Spieler (always)
 		 */
 		if (listener != null){
-			if (all){
+			if (animationInclusive){
 				listener.boardConstellationChanged(server.getPieces());
 				//if (server.isGameOver()) listener.gameIsOver();
 			}
@@ -83,8 +85,8 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 		return status;		
 	}
 	
-	public int throwTheDice() throws RemoteException {
-		return server.dice(this.getColor());
+	public void throwTheDice() throws RemoteException {
+		server.dice(this.getColor());
 	}
 
 	public void recieveRadioMessage(String msg) throws RemoteException {
@@ -116,5 +118,23 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 	public void recieveMessage(String msg) throws RemoteException {
 		listener.showMessage(msg);
 		
+	}
+	
+	public boolean hasAttemptsLeft () throws RemoteException{
+		return attempts > 0;
+	}
+
+
+	public int getDiceResult() throws RemoteException {
+		return dice;
+	}
+
+	public void setDiceResult(int dice) throws RemoteException {
+		this.dice = dice;
+		
+	}
+	
+	public boolean existsServer() throws RemoteException{
+		return (server != null);
 	}
 }
