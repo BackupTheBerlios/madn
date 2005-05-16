@@ -30,13 +30,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class GameFrame extends JFrame implements ActionListener, MouseListener, ClientListener, AppletContext, AppletStub{
+public class GameFrame extends JFrame implements ActionListener, MouseListener, ClientListener, AppletContext, AppletStub, PawnPickingListener{
   
   public static Color[] colors = {new Color(255,0,0), new Color(60,60,60), new Color(0,0,255), new Color(0, 153, 51)};	
- 		
-  
-  private HashMap streams = new HashMap();	
  
+  private HashMap streams = new HashMap();	
+  private InfoDialog dlgInfo;
   protected Client client;
   private int clientColor = Constants.RED;
   private String nickname = "";
@@ -55,10 +54,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   private JTextField tfDiceResult = new JTextField();
   
   private JPanel pnPieces = new JPanel();
-  private JLabel lbPiece1;
-  private JLabel lbPiece2 = new JLabel();
-  private JLabel lbPiece3 = new JLabel();
-  private JLabel lbPiece4 = new JLabel();  
+  private JLabel[] lbPieces = new JLabel[4];
   
   private JButton btMove = new JButton (Toolbox.loadPawnIcon(this.getClass()));
   
@@ -67,7 +63,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   private JScrollPane spRadio = new JScrollPane(taRadio);
   
   private int selectedPiece = -1;
-  //private int dice = 0;
+  private JDesktopPane desktop = null;
   
   public GameFrame(Client client) {
     
@@ -81,7 +77,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		//e1.printStackTrace();
 	}
 	
-	int xSize = 772, ySize = 643;
+  	int xSize = 772, ySize = 643;
 	
     Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	d.width = (d.width - xSize)/2;
@@ -89,6 +85,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 	this.setBounds( d.width, d.height, xSize, ySize);
 	
     this.setResizable(false);
+    
     this.addWindowListener(
     		
     		new WindowAdapter(){
@@ -107,8 +104,16 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-    				
-    				frame.setVisible(false);
+					
+					if (boardApplet!=null){
+			        	boardApplet.stop();
+			        	boardApplet.destroy();
+			        }
+					
+    				if (dlgInfo != null){
+    					dlgInfo.dispose();
+    				}
+    				//frame.setVisible(false);
     				frame.dispose();
     				System.exit(0);
     			}	   			
@@ -121,9 +126,10 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     boardPanel.setLayout(new BorderLayout());
     boardPanel.setBounds(new Rectangle(8,50, 512, 512));
     boardPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-    
+  
     boardApplet =  new BoardApplet();
     boardApplet.setStub(this);
+    boardApplet.setPawnPickingListener(this);
     boardApplet.init();
     boardApplet.start();
     boardPanel.add(boardApplet, BorderLayout.CENTER);
@@ -150,43 +156,39 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     pnPieces.setBounds(new Rectangle(525, 257, 235, 125));
     pnPieces.setLayout(null);
        
-       lbPiece1 = new JLabel(Toolbox.loadImageIcon(clientColor + "1.gif", this.getClass()));   
-	   lbPiece1.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-       lbPiece1.setHorizontalAlignment(SwingConstants.CENTER);
-       //lbPiece1.setText("Piece1");
-       lbPiece1.setBounds(new Rectangle(10, 20, 50, 65));
-       lbPiece1.addMouseListener(this);
+       lbPieces[0] = new JLabel(Toolbox.loadImageIcon(clientColor + "1.gif", this.getClass()));   
+       lbPieces[0].setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
+       lbPieces[0].setHorizontalAlignment(SwingConstants.CENTER);
+       lbPieces[0].setBounds(new Rectangle(10, 20, 50, 65));
+       lbPieces[0].addMouseListener(this);
        
-       lbPiece2 = new JLabel(Toolbox.loadImageIcon(clientColor + "2.gif", this.getClass()));   
-       lbPiece2.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-       lbPiece2.setHorizontalAlignment(SwingConstants.CENTER);
-       //lbPiece2.setText("Piece2");
-       lbPiece2.setBounds(new Rectangle(65, 20, 50, 65));
-       lbPiece2.addMouseListener(this);
+       lbPieces[1] = new JLabel(Toolbox.loadImageIcon(clientColor + "2.gif", this.getClass()));   
+       lbPieces[1].setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
+       lbPieces[1].setHorizontalAlignment(SwingConstants.CENTER);
+       lbPieces[1].setBounds(new Rectangle(65, 20, 50, 65));
+       lbPieces[1].addMouseListener(this);
 		
-       lbPiece3 = new JLabel(Toolbox.loadImageIcon(clientColor + "3.gif", this.getClass()));   
-       lbPiece3.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-       lbPiece3.setHorizontalAlignment(SwingConstants.CENTER);
-       //lbPiece3.setText("Piece3");
-       lbPiece3.setBounds(new Rectangle(120, 20, 50, 65));
-       lbPiece3.addMouseListener(this);
+       lbPieces[2] = new JLabel(Toolbox.loadImageIcon(clientColor + "3.gif", this.getClass()));   
+       lbPieces[2].setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
+       lbPieces[2].setHorizontalAlignment(SwingConstants.CENTER);
+       lbPieces[2].setBounds(new Rectangle(120, 20, 50, 65));
+       lbPieces[2].addMouseListener(this);
        
-       lbPiece4 = new JLabel(Toolbox.loadImageIcon(clientColor + "4.gif", this.getClass()));   
-       lbPiece4.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-       lbPiece4.setHorizontalAlignment(SwingConstants.CENTER);
-       //lbPiece4.setText("Piece4");
-       lbPiece4.setBounds(new Rectangle(175, 20, 50, 65));
-       lbPiece4.addMouseListener(this);
+       lbPieces[3] = new JLabel(Toolbox.loadImageIcon(clientColor + "4.gif", this.getClass()));   
+       lbPieces[3].setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
+       lbPieces[3].setHorizontalAlignment(SwingConstants.CENTER);
+       lbPieces[3].setBounds(new Rectangle(175, 20, 50, 65));
+       lbPieces[3].addMouseListener(this);
 
        btMove.setBounds(new Rectangle(45, 90, 145, 25));
        btMove.setText("Ziehen");
        btMove.setActionCommand("move");
        btMove.addActionListener(this);
        
-    pnPieces.add(lbPiece1, null);
-    pnPieces.add(lbPiece2, null);
-    pnPieces.add(lbPiece3, null);
-    pnPieces.add(lbPiece4, null);
+    pnPieces.add(lbPieces[0], null);
+    pnPieces.add(lbPieces[1], null);
+    pnPieces.add(lbPieces[2], null);
+    pnPieces.add(lbPieces[3], null);
     pnPieces.add(btMove, null);
     
     pnRadio.setBorder(new TitledBorder("  Radio  "));
@@ -227,7 +229,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     updateComponentEnabling();
     updateStatusBar();
     
-    
+    doLayout();
     setVisible(true);
     
   }
@@ -248,14 +250,14 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		Client c = s.newClient("Robert");
 		f2 = new GameFrame(c);
 		c.setClientListener(f2);
-		
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e1){}
-		
-		c = s.newClient("Waldemar");
-		f3 = new GameFrame(c);
-		c.setClientListener(f3);
+//		
+//		try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e1){}
+//		
+//		c = s.newClient("Waldemar");
+//		f3 = new GameFrame(c);
+//		c.setClientListener(f3);
 		
 		
 	} catch (RemoteException e) {
@@ -292,17 +294,17 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
     JMenu helpMenu = new JMenu("?");
 
-      mi = new JMenuItem("Spielregeln", Toolbox.loadRulesIcon(this.getClass()));
+      mi = new JMenuItem("Spielregeln/Steuerung", Toolbox.loadRulesIcon(this.getClass()));
       mi.addActionListener(this);
       mi.setActionCommand("showRules");
-      setCtrlAccelerator(mi, 'R');
+      setCtrlAccelerator(mi, 'S');
       helpMenu.add(mi);
-
+     
       helpMenu.addSeparator();
 
       mi = new JMenuItem("Über...", Toolbox.loadInfoIcon(this.getClass()));
       mi.addActionListener(this);
-      mi.setActionCommand("showInfo");
+      mi.setActionCommand("showAbout");
       setCtrlAccelerator(mi, 'I');
       helpMenu.add(mi);
 
@@ -365,6 +367,41 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 	}
   }
   
+  private void move(){
+	if ((selectedPiece >= 0)&&(selectedPiece < 4)){
+		try {
+			int dice = client.getDiceResult();
+			if (dice > 0){
+				client.getServer().move(client.getColor(), selectedPiece, dice);
+				tfDiceResult.setText("");
+			}else{
+				showTip("Noch nicht gewürfelt?!", 5000);
+			}
+		} catch (InvalidMoveException e1) {
+				if (e1.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
+					tfDiceResult.setText("");
+				}
+		} catch (RemoteException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+	}else{
+		showTip("Spielstein ausgewählt?!", 5000);
+	}  	
+  }
+  
+  private void dice(){
+   	try {
+   		
+		client.throwTheDice();
+		tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
+		
+	} catch (RemoteException e1) {
+		// e1.printStackTrace();
+		tfDiceResult.setText("Würfelergebnis: n.a.");
+	}  	
+  }
+  
   public void actionPerformed(ActionEvent e){
     String cmd = e.getActionCommand();
 
@@ -376,48 +413,22 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			e1.printStackTrace();
 		}
     }else if (cmd.equals("dispose")){
-        if (boardApplet!=null){
-        	boardApplet.stop();
-        	boardApplet.destroy();
-        }
+        
         
     	this.processEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     
     }else if (cmd.equals("showRules")){
-
-    }else if (cmd.equals("showInfo")){
+    	if (dlgInfo == null)
+    		dlgInfo = new InfoDialog(this);
+    	
+    	dlgInfo.setVisible(true);
+    	
+    }else if (cmd.equals("showAbout")){
 
     }else if (cmd.equals("dice")){
-       	try {
-       		
-			client.throwTheDice();
-			tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
-			
-		} catch (RemoteException e1) {
-			// e1.printStackTrace();
-			tfDiceResult.setText("Würfelergebnis: n.a.");
-		}
+    	dice();
     }else if (cmd.equals("move")){
-    	if ((selectedPiece >= 0)&&(selectedPiece < 4)){
-    		try {
-				int dice = client.getDiceResult();
-				if (dice > 0){
-					client.getServer().move(client.getColor(), selectedPiece, dice);
-					tfDiceResult.setText("");
-				}else{
-					showTip("Noch nicht gewürfelt?!", 5000);
-				}
-    		} catch (InvalidMoveException e1) {
-					if (e1.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
-						tfDiceResult.setText("");
-					}
-			} catch (RemoteException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}
-    	}else{
-    		showTip("Spielstein ausgewählt?!", 5000);
-    	}
+    	move();
     }
   }
 /* 
@@ -498,24 +509,16 @@ public void mouseClicked(MouseEvent e) {
 public void mousePressed(MouseEvent e) {
 	
 	// Umrahmung des bisher gewählten Spielstein entfernen
-	if ((selectedPiece == 0)&& !e.getSource().equals(lbPiece1))
-		lbPiece1.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-	else if ((selectedPiece == 1)&& !e.getSource().equals(lbPiece2))
-		lbPiece2.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-	else if ((selectedPiece == 2)&& !e.getSource().equals(lbPiece3))
-		lbPiece3.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-	else if ((selectedPiece == 3)&& !e.getSource().equals(lbPiece4))
-		lbPiece4.setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-	
+	if ((selectedPiece!= -1) && !e.getSource().equals(lbPieces[selectedPiece]))
+		lbPieces[selectedPiece].setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
+		
 	// Neuen Spielstein wählen
-	if (e.getSource().equals(lbPiece1)){
-		selectedPiece = 0;
-	}else if (e.getSource().equals(lbPiece2))
-		selectedPiece = 1;
-	else if (e.getSource().equals(lbPiece3))
-		selectedPiece = 2;
-	else if (e.getSource().equals(lbPiece4))
-		selectedPiece = 3;
+	for (int i = 0; i < lbPieces.length; i++) {
+		if (e.getSource().equals(lbPieces[i])){
+			selectedPiece = i;
+			break;
+		}
+	}
 	
 	// Umrahmung entsprechend der Spielerfarbe setzen
 	((JLabel)e.getSource()).setBorder(BorderFactory.createLineBorder(colors[clientColor],2));	
@@ -532,22 +535,11 @@ public void mouseEntered(MouseEvent e) {
 
 public void mouseExited(MouseEvent e) {
 	
-	
-	if ((e.getSource().equals(lbPiece1) && (selectedPiece != 0))
-		||(e.getSource().equals(lbPiece2) && (selectedPiece != 1))
-		||(e.getSource().equals(lbPiece3) && (selectedPiece != 2))
-		||(e.getSource().equals(lbPiece4) && (selectedPiece != 3))
-		){
-		
+	if ((selectedPiece != -1)&& e.getSource().equals(lbPieces[selectedPiece])){
+		((JLabel)e.getSource()).setBorder(BorderFactory.createLineBorder(colors[clientColor],2));
+	}else{
 		((JLabel)e.getSource()).setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
-	}else if ((e.getSource().equals(lbPiece1) && (selectedPiece == 0))
-			||(e.getSource().equals(lbPiece2) && (selectedPiece == 1))
-			||(e.getSource().equals(lbPiece3) && (selectedPiece == 2))
-			||(e.getSource().equals(lbPiece4) && (selectedPiece == 3))
-			){
-			
-			((JLabel)e.getSource()).setBorder(BorderFactory.createLineBorder(colors[clientColor],2));
-		}
+	}
 
 }
 
@@ -572,5 +564,31 @@ public void addRadioMessage(String msg) {
 
 public void showMessage(String msg) {
 	MessageDialogs.showInfoMessageDialog(this, "Server-Message", msg);
+}
+/* (non-Javadoc)
+ * @see gui.PawnPickingListener#pawnClicked(int, int, int)
+ */
+public void pawnClicked(int color, int id, int clickCount) {
+	if (color == clientColor){
+		if (id != selectedPiece){
+			if ((selectedPiece >= 0)&&(selectedPiece <lbPieces.length))
+				lbPieces[selectedPiece].setBorder(BorderFactory.createLineBorder(this.getBackground(),2));
+			
+			selectedPiece = id;
+			lbPieces[selectedPiece].setBorder(BorderFactory.createLineBorder(colors[clientColor],2));
+		}
+		
+		if ((clickCount == 2 /*double click*/) && btMove.isEnabled()){
+			move();
+		}
+	}
+}
+/* (non-Javadoc)
+ * @see gui.PawnPickingListener#rightMouseButtonDblClicked()
+ */
+public void rightMouseButtonClicked() {
+	if (btDice.isEnabled()){
+		dice();
+	}
 }
 }

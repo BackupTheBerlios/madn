@@ -154,18 +154,22 @@ public class ServerImpl extends ClientImpl implements Server {
 							if (distance==6){
 								clients[activeClient].setStatus(Constants.ACTIVE_DICE);
 								resetActiveClientAttempts();
+								refreshClients(true);
 								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist abermals am Zug.");
 							}else{ 
 								setNextClientActive();
+								refreshClients(true);
 								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
 							}
 						}else{
 							clients[activeClient].setStatus(Constants.INACTIVE);
-							sendRadioMessage("Game Over!!! " + clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] ist der Gewinner.");
-							clients[activeClient].recieveMessage("Game Over!!!\nHerzlichen Glückwunsch Sie haben gewonnen.");
+							int c = activeClient;
 							activeClient = -1;
+							refreshClients(true);
+							sendRadioMessage("Game Over!!! " + clients[c].getNickname() + " [" + Toolbox.colorToString(color) + "] ist der Gewinner.");
+							clients[c].recieveMessage("Game Over!!!\nHerzlichen Glückwunsch Sie haben gewonnen.");
 						}
-						refreshClients(true);
+						
 					} catch (InvalidMoveException e) {
 						if (e.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
 							if (clients[activeClient].getAttempts() > 0){
@@ -173,13 +177,14 @@ public class ServerImpl extends ClientImpl implements Server {
 							}else{
 								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(color) + "] konnte nicht ziehen.");
 								setNextClientActive();
+								refreshClients(false);
 								sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.");
 							}
 						}else{
 							//clients[activeClient].setStatus(Constants.ACTIVE_MOVE);
 							clients[activeClient].recieveMessage(e.getMessage());
 						}
-						refreshClients(false);
+						
 						throw (e);
 					}
 				}else{ // clients[activeClient].getStatus() == Constants.ACTIVE_MOVE

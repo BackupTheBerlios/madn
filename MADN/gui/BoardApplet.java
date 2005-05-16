@@ -1,8 +1,5 @@
 /*
  * Created on 09.05.2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 package gui;
 
@@ -11,16 +8,19 @@ import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GraphicsConfiguration;
+import java.awt.event.MouseEvent;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.Background;
 import javax.media.j3d.BoundingSphere;
+import javax.media.j3d.Bounds;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Canvas3D;
 import javax.media.j3d.ColoringAttributes;
 import javax.media.j3d.Geometry;
 import javax.media.j3d.GeometryArray;
 import javax.media.j3d.ImageComponent2D;
+import javax.media.j3d.Material;
 import javax.media.j3d.PointLight;
 import javax.media.j3d.PolygonAttributes;
 import javax.media.j3d.QuadArray;
@@ -35,24 +35,26 @@ import javax.vecmath.Point2f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
 import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
 
 import model.Constants;
 import model.Piece;
 
 import com.sun.j3d.utils.behaviors.vp.OrbitBehavior;
+import com.sun.j3d.utils.geometry.Primitive;
 import com.sun.j3d.utils.image.TextureLoader;
+import com.sun.j3d.utils.picking.PickResult;
+import com.sun.j3d.utils.picking.PickTool;
+import com.sun.j3d.utils.picking.behaviors.PickMouseBehavior;
 import com.sun.j3d.utils.universe.SimpleUniverse;
 import com.sun.j3d.utils.universe.ViewingPlatform;
 
 /**
  * @author Mario
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class BoardApplet extends Applet {
 
+	
+	private PawnPickingListener listener = null;
 	private Transform3D[][] destinationTransforms = new Transform3D[4][4];
 	private Transform3D[][] startTransforms = new Transform3D[4][4];
 	private Transform3D[]   trackTransforms = new Transform3D[40];
@@ -61,37 +63,47 @@ public class BoardApplet extends Applet {
 	
 	private SimpleUniverse universe;
 	
+	
 	public BoardApplet(){
 		
 		setLayout(new BorderLayout());
+				
 		GraphicsConfiguration config = SimpleUniverse.getPreferredConfiguration();
 		Canvas3D c3d = new Canvas3D(config);
+		
 		add(c3d, BorderLayout.CENTER);
 		
 		BranchGroup scene = buildSceneGraph();
 		
 		this.universe = new SimpleUniverse(c3d);
-		universe.getViewingPlatform().setNominalViewingTransform();
+				
+		Transform3D viewTranslation = new Transform3D();
+		viewTranslation.setTranslation(new Vector3d(0,0,1));
+		universe.getViewingPlatform().getViewPlatformTransform().setTransform(viewTranslation);
 		
 		PointLight light = new PointLight();
-		light.setPosition(0f,0.5f,0f);
+		light.setPosition(0f,0f,1f);
 		light.setInfluencingBounds(new BoundingSphere(new Point3d(0,0,0), 2.0));
 		scene.addChild(light);
 		
 		OrbitBehavior orbit = new OrbitBehavior(c3d, OrbitBehavior.REVERSE_ALL|OrbitBehavior.STOP_ZOOM);
+		orbit.setRotateEnable(true);
+		orbit.setZoomEnable(true);
+		orbit.setTranslateEnable(false);
 		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
 		orbit.setSchedulingBounds(bounds);
 		orbit.setMinRadius(0.9);
 		
+		PickPawnBehavior pick = new PickPawnBehavior(c3d, scene, new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 2.0), PickTool.GEOMETRY, 2f);
+		scene.addChild(pick);
+		
 		ViewingPlatform view = universe.getViewingPlatform();
 		view.setViewPlatformBehavior(orbit);
-		Transform3D t = new Transform3D();
-		view.getViewPlatformTransform().getTransform(t);
-		t.setTranslation(new Vector3f(0f,0f, 0.9f));
-		
-		view.getViewPlatformTransform().setTransform(t);
 		
 		universe.addBranchGraph(scene);
+		
+		
+		
 	}
 	
 	public BranchGroup buildSceneGraph(){
@@ -116,26 +128,28 @@ public class BoardApplet extends Applet {
 		float z = 0.256f;
 		
 		// Unterseite
-		//ColoredRectangularSide lowerSide = new ColoredRectangularSide(new Color3f(0f, 0f, 0f), ColoredRectangularSide.ZX_PLANE, x, -y, z);
-		TexturedRectangularSide lowerSide = new TexturedRectangularSide("gui/images/back.gif", ColoredRectangularSide.ZX_PLANE, x, -y, z);
-		
+		ColoredRectangularSide lowerSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[0]), ColoredRectangularSide.ZX_PLANE, x, -y, z);
+		//TexturedRectangularSide lowerSide = new TexturedRectangularSide("gui/images/back.gif", ColoredRectangularSide.ZX_PLANE, x, -y, z);
+				
 		// Oberseite
 		TexturedRectangularSide upperSide = new TexturedRectangularSide("gui/images/board.gif", ColoredRectangularSide.ZX_PLANE, x, y, z);
+				
 		// Rand links
-		//ColoredRectangularSide leftSide = new ColoredRectangularSide(new Color3f(1f, 0f, 0f), ColoredRectangularSide.ZY_PLANE, -x, y, z);
-		TexturedRectangularSide leftSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.ZY_PLANE, -x, y, z);
-		
+		ColoredRectangularSide leftSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.ZY_PLANE, -x, y, z);
+		//TexturedRectangularSide leftSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.ZY_PLANE, -x, y, z);
+				
 		// Rand rechts
-		//ColoredRectangularSide rightSide = new ColoredRectangularSide(new Color3f(1f, 0f, 0f), ColoredRectangularSide.ZY_PLANE, x, y, z);
-		TexturedRectangularSide rightSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.ZY_PLANE, x, y, z);
-		
+		ColoredRectangularSide rightSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.ZY_PLANE, x, y, z);
+		//TexturedRectangularSide rightSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.ZY_PLANE, x, y, z);
+				
 		// Rand hinten
-		//ColoredRectangularSide backSide = new ColoredRectangularSide(new Color3f(1f, 0f, 0f), ColoredRectangularSide.XY_PLANE, x, y, -z);
-		TexturedRectangularSide backSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.XY_PLANE, x, y, -z);
+		ColoredRectangularSide backSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.XY_PLANE, x, y, -z);
+		//TexturedRectangularSide backSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.XY_PLANE, x, y, -z);
+				
 		// Rand vorne
-		//ColoredRectangularSide frontSide = new ColoredRectangularSide(new Color3f(1f, 0f, 0f), ColoredRectangularSide.XY_PLANE, x, y, z);
-		TexturedRectangularSide frontSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.XY_PLANE, x, y, z);
-		
+		ColoredRectangularSide frontSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.XY_PLANE, x, y, z);
+		//TexturedRectangularSide frontSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.XY_PLANE, x, y, z);
+				
 		Transform3D rot = new Transform3D();
 		rot.rotX(Math.PI * 40.0 / 180.0);
 		Transform3D rotY = new Transform3D();
@@ -145,6 +159,11 @@ public class BoardApplet extends Applet {
 		rot.mul(rotY);
 		
 		TransformGroup tg = new TransformGroup(rot);
+		
+		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
+		tg.setCapability(TransformGroup.ENABLE_PICK_REPORTING);
+		
 		tg.addChild(lowerSide);
 		tg.addChild(upperSide);
 		tg.addChild(leftSide);
@@ -152,9 +171,12 @@ public class BoardApplet extends Applet {
 		tg.addChild(backSide);
 		tg.addChild(frontSide);
 		
+		
+		
 		for (int i=0; i<pawns.length; i++){
 			for (int j=0; j<pawns[i].length; j++){
 				pawns[i][j] = new Pawn(i, j, y, 0.01575f, 0.0405f);
+				
 				tg.addChild(pawns[i][j]);
 			}
 		}
@@ -189,6 +211,28 @@ public class BoardApplet extends Applet {
 		}
 		
 	}
+	
+	public void setPawnPickingListener (PawnPickingListener listener){
+		this.listener = listener;
+	}
+	
+	public PawnPickingListener getPawnPickingListener (){
+		return listener;
+	}
+	
+//	protected Pawn getPawnOfShape (Shape3D shape){
+//		Pawn p = null;
+//		for (int i=0; i<pawns.length; i++){
+//			for (int j=0; j<pawns[i].length; j++){
+//				if ((pawns[i][j]!=null)&&(pawns[i][j].containsShape3D(shape))){
+//					p = pawns[i][j];
+//					break;
+//				}
+//				
+//			}
+//		}
+//		return p;
+//	}
 	
 	private void resetPawns(){
 		for (int i=0; i<pawns.length; i++){
@@ -320,6 +364,12 @@ public class BoardApplet extends Applet {
 		public TexturedRectangularSide(String texFilename, int plane, float x, float y, float z){
 			this.setGeometry(buildGeometry(plane, x, y, z));
 			this.setAppearance(texFilename);
+			this.setCapability(Shape3D.ALLOW_GEOMETRY_READ);
+			this.setCapability(Shape3D.ALLOW_GEOMETRY_WRITE);
+			this.setCapability(Shape3D.ALLOW_PICKABLE_READ);
+			this.setCapability(Shape3D.ALLOW_PICKABLE_WRITE);
+			this.setCapability(Shape3D.ENABLE_PICK_REPORTING);
+			PickTool.setCapabilities(this, PickTool.INTERSECT_FULL);
 		}
 				
 		public void setAppearance (String fname){
@@ -391,6 +441,12 @@ public class BoardApplet extends Applet {
 		public ColoredRectangularSide(Color3f color, int plane, float x, float y, float z){
 			this.setGeometry(buildGeometry(plane, x, y, z));
 			this.setAppearance(color);
+			this.setCapability(Shape3D.ALLOW_GEOMETRY_READ);
+			this.setCapability(Shape3D.ALLOW_GEOMETRY_WRITE);
+			this.setCapability(Shape3D.ALLOW_PICKABLE_READ);
+			this.setCapability(Shape3D.ALLOW_PICKABLE_WRITE);
+			this.setCapability(Shape3D.ENABLE_PICK_REPORTING);
+			PickTool.setCapabilities(this, PickTool.INTERSECT_FULL);
 		}
 				
 		public void setAppearance (Color3f color){
@@ -423,23 +479,61 @@ public class BoardApplet extends Applet {
 		public Appearance buildAppearance (Color3f color){
 			Appearance a = new Appearance();
 			
-			ColoringAttributes ca = new ColoringAttributes();
+			float shading = 0.3f;		
+			ColoringAttributes ca = new ColoringAttributes(color, ColoringAttributes.SHADE_GOURAUD);
+			Material m = new Material(color, new Color3f(color.x * shading, color.y * shading, color.z * shading), color, color, 50f);
 			
-			ca.setColor(color);
-			//ca.setShadeModel(ColoringAttributes.SHADE_GOURAUD);
-			
+			PolygonAttributes pa = new PolygonAttributes(PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0.0f);
+                  
 			a.setColoringAttributes(ca);
-			
+			a.setPolygonAttributes(pa);
 			return a;
 		}
 	
 	}
 	
-	public void test(){
-		//universe.getCanvas().
-		pawns[0][0].setTransform(trackTransforms[20]);
-		//universe.getCanvas().postRender();
+	private class PickPawnBehavior extends PickMouseBehavior{
+		
+		public PickPawnBehavior (Canvas3D canvas, BranchGroup root, Bounds bounds, int mode, float tolerance){
+			super(canvas, root, bounds);
+			setSchedulingBounds(bounds);
+			setMode(mode);
+			setTolerance(tolerance);
+		}
+
+		public void updateScene(int xpos, int ypos){
+			MouseEvent m = this.mevent;			
+			
+			if (m.getButton() == MouseEvent.BUTTON1 /*Left*/){
+				
+				pickCanvas.setShapeLocation(xpos, ypos);
+				
+				PickResult result = pickCanvas.pickClosest();
+				
+				if (result != null){
+						
+					Primitive pickedPrimitive = null;
+					pickedPrimitive = (Primitive) result.getNode(PickResult.PRIMITIVE);
+					
+					if (pickedPrimitive != null){
+						
+						if (pickedPrimitive instanceof MyCone){
+							MyCone c = (MyCone)pickedPrimitive;
+							if (listener != null){
+								listener.pawnClicked(c.getColor(), c.getID(), m.getClickCount());
+							}
+						}else if (pickedPrimitive instanceof MySphere){
+							MySphere s = (MySphere)pickedPrimitive;
+							if (listener != null){
+								listener.pawnClicked(s.getColor(), s.getID(), m.getClickCount());
+							}
+						}
+					}
+				}
+			}else if ((m.getButton() == MouseEvent.BUTTON3 /*Right*/) && (m.getClickCount()==1)){
+				if (listener != null) listener.rightMouseButtonClicked();
+			}
+		}
 	}
-	
 }
 
