@@ -36,6 +36,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
  
   private HashMap streams = new HashMap();	
   private InfoDialog dlgInfo;
+  private AboutDialog dlgAbout;
   protected Client client;
   private int clientColor = Constants.RED;
   private String nickname = "";
@@ -50,8 +51,9 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   
   private JPanel pnDice = new JPanel();
   private JButton btDice = new JButton(Toolbox.loadDiceIcon(this.getClass()));
-  private JPanel diceApplet = new JPanel();
-  private JTextField tfDiceResult = new JTextField();
+  private JPanel dicePanel = new JPanel();
+  private DiceApplet diceApplet = null;
+  //private JTextField tfDiceResult = new JTextField();
   
   private JPanel pnPieces = new JPanel();
   private JLabel[] lbPieces = new JLabel[4];
@@ -112,9 +114,18 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			        	boardApplet.destroy();
 			        }
 					
+					if (diceApplet!=null){
+						diceApplet.stop();
+						diceApplet.destroy();
+			        }
+					
     				if (dlgInfo != null){
     					dlgInfo.dispose();
     				}
+       				if (dlgAbout != null){
+       					dlgAbout.dispose();
+    				}    				
+    				
     				//frame.setVisible(false);
     				frame.dispose();
     				System.exit(0);
@@ -140,19 +151,24 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     pnDice.setLayout(null);
     pnDice.setBorder(new TitledBorder("  Würfel  "));
 
-       diceApplet.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-       diceApplet.setBounds(new Rectangle(45, 20, 145, 145));
-       diceApplet.setLayout(new BorderLayout());
-          tfDiceResult.setSize(150, 21);
-       diceApplet.add(tfDiceResult, BorderLayout.CENTER);
-
+       dicePanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+       dicePanel.setBounds(new Rectangle(45, 20, 145, 145));
+       dicePanel.setLayout(new BorderLayout());
+          //tfDiceResult.setSize(150, 21);
+       	  //diceApplet.add(tfDiceResult, BorderLayout.CENTER);
+       	  diceApplet = new DiceApplet();
+       	  diceApplet.setStub(this);
+       	  diceApplet.init();
+       	  diceApplet.start();
+       	  dicePanel.add(diceApplet, BorderLayout.CENTER);
+       		
        btDice.setBounds(new Rectangle(45, 170, 145, 25));
        btDice.setText("Würfeln");
        btDice.setActionCommand("dice");
        btDice.addActionListener(this);
 
     pnDice.add(btDice, null);
-    pnDice.add(diceApplet, null);
+    pnDice.add(dicePanel, null);
 
     pnPieces.setBorder(new TitledBorder("  Spielsteine  "));
     pnPieces.setBounds(new Rectangle(525, 257, 235, 125));
@@ -377,13 +393,13 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			int dice = client.getDiceResult();
 			if (dice > 0){
 				client.getServer().move(client.getColor(), selectedPiece, dice);
-				tfDiceResult.setText("");
+				//tfDiceResult.setText("");
 			}else{
 				showTip("Noch nicht gewürfelt?!", 5000);
 			}
 		} catch (InvalidMoveException e1) {
 				if (e1.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
-					tfDiceResult.setText("");
+					//tfDiceResult.setText("");
 				}
 		} catch (RemoteException e2) {
 			// TODO Auto-generated catch block
@@ -398,11 +414,11 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
    	try {
    		
 		client.throwTheDice();
-		tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
+		//tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
 		
 	} catch (RemoteException e1) {
 		// e1.printStackTrace();
-		tfDiceResult.setText("Würfelergebnis: n.a.");
+		//tfDiceResult.setText("Würfelergebnis: n.a.");
 	}  	
   }
   
@@ -428,7 +444,10 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     	dlgInfo.setVisible(true);
     	
     }else if (cmd.equals("showAbout")){
-
+    	if (dlgAbout == null)
+    		dlgAbout = new AboutDialog(this);
+    	
+    	dlgAbout.setVisible(true);
     }else if (cmd.equals("dice")){
     	dice();
     }else if (cmd.equals("move")){

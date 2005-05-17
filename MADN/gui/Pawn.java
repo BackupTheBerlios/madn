@@ -47,19 +47,28 @@ public class Pawn extends TransformGroup {
 		this.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		
 		Color3f col3f = new Color3f(GameFrame.colors[color]);
-		float shading = 0.3f;
-		ColoringAttributes ca = new ColoringAttributes(col3f, ColoringAttributes.SHADE_GOURAUD);
-		Material m = new Material(col3f, new Color3f(col3f.x * shading, col3f.y * shading, col3f.z * shading), col3f, col3f, 50f);
-		
-		Appearance ap = new Appearance();
-		ap.setColoringAttributes(ca);
-		ap.setMaterial(m);
-		
-		
-		
+//		float shading = 0.3f;
+//		ColoringAttributes ca = new ColoringAttributes(col3f, ColoringAttributes.SHADE_GOURAUD);
+//		Material m = new Material(col3f, new Color3f(col3f.x * shading, col3f.y * shading, col3f.z * shading), col3f, col3f, 50f);
+//		
+//		Appearance ap = new Appearance();
+//		ap.setColoringAttributes(ca);
+//		ap.setMaterial(m);
+		float shading = 0.1f;
+		Color3f white = new Color3f(1,1,1);
+		Color3f black = new Color3f(0,0,0);
+		Color3f darker = new Color3f(col3f.x * shading,col3f.y*shading,col3f.z*shading);
+		Color3f specular = new Color3f(0.45f,0.4f,0.4f);
+		Appearance a = new Appearance();
+	
+ 		ColoringAttributes ca = new ColoringAttributes(col3f, ColoringAttributes.SHADE_GOURAUD);
+		a.setColoringAttributes(ca);
+ 		
+ 		Material m = new Material(col3f, darker, col3f, specular, 80f);
+		a.setMaterial(m);		
 		
 		sphere = new MySphere(color, id, radius * 0.6f);
-		sphere.setAppearance(ap);
+		sphere.setAppearance(a);
 		sphere.setPickable(true);
 		
 		sphere.setCapability(Primitive.ALLOW_BOUNDS_READ);
@@ -70,7 +79,7 @@ public class Pawn extends TransformGroup {
 		sphere.setCapability(Primitive.ENABLE_PICK_REPORTING);
 		
 		cone = new MyCone(color, id, radius, height - sphere.getRadius() * 0.5f);
-		cone.setAppearance(ap);
+		cone.setAppearance(a);
 		cone.setPickable(true);
 		cone.setCapability(Primitive.ALLOW_BOUNDS_READ);
 		cone.setCapability(Primitive.ALLOW_BOUNDS_WRITE);

@@ -3,6 +3,8 @@
  */
 package gui;
 
+
+
 import java.applet.Applet;
 
 import java.awt.BorderLayout;
@@ -10,38 +12,29 @@ import java.awt.Color;
 import java.awt.GraphicsConfiguration;
 import java.awt.event.MouseEvent;
 
-import javax.media.j3d.Appearance;
+import javax.media.j3d.AmbientLight;
 import javax.media.j3d.Background;
 import javax.media.j3d.BoundingSphere;
 import javax.media.j3d.Bounds;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Canvas3D;
-import javax.media.j3d.ColoringAttributes;
-import javax.media.j3d.Geometry;
-import javax.media.j3d.GeometryArray;
-import javax.media.j3d.ImageComponent2D;
-import javax.media.j3d.Material;
+import javax.media.j3d.DirectionalLight;
 import javax.media.j3d.PointLight;
-import javax.media.j3d.PolygonAttributes;
-import javax.media.j3d.QuadArray;
-import javax.media.j3d.Shape3D;
-import javax.media.j3d.Texture;
-import javax.media.j3d.Texture2D;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 
 import javax.vecmath.Color3f;
-import javax.vecmath.Point2f;
 import javax.vecmath.Point3d;
-import javax.vecmath.Point3f;
 import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
 
 import model.Constants;
 import model.Piece;
 
+import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
+import com.sun.j3d.utils.behaviors.mouse.MouseZoom;
 import com.sun.j3d.utils.behaviors.vp.OrbitBehavior;
 import com.sun.j3d.utils.geometry.Primitive;
-import com.sun.j3d.utils.image.TextureLoader;
 import com.sun.j3d.utils.picking.PickResult;
 import com.sun.j3d.utils.picking.PickTool;
 import com.sun.j3d.utils.picking.behaviors.PickMouseBehavior;
@@ -81,24 +74,46 @@ public class BoardApplet extends Applet {
 		viewTranslation.setTranslation(new Vector3d(0,0,1));
 		universe.getViewingPlatform().getViewPlatformTransform().setTransform(viewTranslation);
 		
-		PointLight light = new PointLight();
-		light.setPosition(0f,0f,1f);
-		light.setInfluencingBounds(new BoundingSphere(new Point3d(0,0,0), 2.0));
-		scene.addChild(light);
+//		PointLight light = new PointLight();
+//		light.setPosition(0f,0f,1f);
+//		light.setInfluencingBounds(new BoundingSphere(new Point3d(0,0,0), 2.0));
+//		scene.addChild(light);
+
+		// Set up the global lights
+		BoundingSphere bounds =
+	    new BoundingSphere(new Point3d(0.0,0.0,0.0), 100.0);
 		
-		OrbitBehavior orbit = new OrbitBehavior(c3d, OrbitBehavior.REVERSE_ALL|OrbitBehavior.STOP_ZOOM);
-		orbit.setRotateEnable(true);
-		orbit.setZoomEnable(true);
-		orbit.setTranslateEnable(false);
-		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
-		orbit.setSchedulingBounds(bounds);
-		orbit.setMinRadius(0.9);
+		Color3f lColor1 = new Color3f(0.7f, 0.7f, 0.7f);
+		Vector3f lDir1  = new Vector3f(-1.0f, -1.0f, -1.0f);
+		Color3f alColor = new Color3f(0.2f, 0.2f, 0.2f);
+
+		AmbientLight aLgt = new AmbientLight(alColor);
+		aLgt.setInfluencingBounds(bounds);
+		
+		DirectionalLight dLgt = new DirectionalLight(lColor1, lDir1);
+		dLgt.setInfluencingBounds(bounds);
+		
+		PointLight pLgt = new PointLight();
+		pLgt.setPosition(0f,1f,1.5f);
+		pLgt.setInfluencingBounds(bounds);
+		
+		scene.addChild(aLgt);
+		scene.addChild(dLgt);
+		scene.addChild(pLgt);
+		
+//		OrbitBehavior orbit = new OrbitBehavior(c3d, OrbitBehavior.REVERSE_ALL|OrbitBehavior.STOP_ZOOM);
+//		orbit.setRotateEnable(true);
+//		orbit.setZoomEnable(true);
+//		orbit.setTranslateEnable(false);
+//		//BoundingSphere bounds = new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 100.0);
+//		orbit.setSchedulingBounds(bounds);
+//		orbit.setMinRadius(0.9);
 		
 		PickPawnBehavior pick = new PickPawnBehavior(c3d, scene, new BoundingSphere(new Point3d(0.0, 0.0, 0.0), 2.0), PickTool.GEOMETRY, 2f);
 		scene.addChild(pick);
 		
-		ViewingPlatform view = universe.getViewingPlatform();
-		view.setViewPlatformBehavior(orbit);
+//		ViewingPlatform view = universe.getViewingPlatform();
+//		view.setViewPlatformBehavior(orbit);
 		
 		universe.addBranchGraph(scene);
 		
@@ -112,7 +127,7 @@ public class BoardApplet extends Applet {
 		root.addChild(buildGeometry());
 		
 		Color3f color= new Color3f();
-		color.set(new Color(204, 204, 255));
+		color.set(new Color(220, 220, 255));
 		Background background = new Background(color); 
 		background.setApplicationBounds(new BoundingSphere());
 		root.addChild(background);		
@@ -123,33 +138,98 @@ public class BoardApplet extends Applet {
 	public BranchGroup buildGeometry(){
 		BranchGroup bgBoard = new BranchGroup();
 		
+		Color3f yellow = new Color3f(new Color(255,255,0).darker().darker());
+		Color3f grey = new Color3f(0.2f,0.2f,0.2f);
+		Color3f red = new Color3f(GameFrame.colors[0].darker().darker());
+		
+		float gap = 0.008f;
 		float x = 0.256f;
 		float y = 0.016f;
 		float z = 0.256f;
 		
 		// Unterseite
-		ColoredRectangularSide lowerSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[0]), ColoredRectangularSide.ZX_PLANE, x, -y, z);
+		ColoredRectangularSide lowerSide = new ColoredRectangularSide(grey, ColoredRectangularSide.ZX_PLANE, x, -y, z, gap);
 		//TexturedRectangularSide lowerSide = new TexturedRectangularSide("gui/images/back.gif", ColoredRectangularSide.ZX_PLANE, x, -y, z);
 				
 		// Oberseite
-		TexturedRectangularSide upperSide = new TexturedRectangularSide("gui/images/board.gif", ColoredRectangularSide.ZX_PLANE, x, y, z);
+		TexturedRectangularSide upperSide = new TexturedRectangularSide(yellow, "gui/images/board.gif", TexturedRectangularSide.ZX_PLANE, x, y, z, gap);
 				
 		// Rand links
-		ColoredRectangularSide leftSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.ZY_PLANE, -x, y, z);
-		//TexturedRectangularSide leftSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.ZY_PLANE, -x, y, z);
+		ColoredRectangularSide leftSide = new ColoredRectangularSide(red, ColoredRectangularSide.YZ_PLANE, -x, y, z, gap);
 				
 		// Rand rechts
-		ColoredRectangularSide rightSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.ZY_PLANE, x, y, z);
+		ColoredRectangularSide rightSide = new ColoredRectangularSide(red, ColoredRectangularSide.YZ_PLANE, x, y, z, gap);
 		//TexturedRectangularSide rightSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.ZY_PLANE, x, y, z);
 				
 		// Rand hinten
-		ColoredRectangularSide backSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.XY_PLANE, x, y, -z);
+		ColoredRectangularSide backSide = new ColoredRectangularSide(red, ColoredRectangularSide.XY_PLANE, x, y, -z, gap);
 		//TexturedRectangularSide backSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.XY_PLANE, x, y, -z);
 				
 		// Rand vorne
-		ColoredRectangularSide frontSide = new ColoredRectangularSide(new Color3f(GameFrame.colors[1]), ColoredRectangularSide.XY_PLANE, x, y, z);
+		ColoredRectangularSide frontSide = new ColoredRectangularSide(red, ColoredRectangularSide.XY_PLANE, x, y, z, gap);
 		//TexturedRectangularSide frontSide = new TexturedRectangularSide("gui/images/border.gif", ColoredRectangularSide.XY_PLANE, x, y, z);
-				
+
+		// Verbindungsfläche Unterseite - Rand links
+		ColoredRectangularSide lowerLeftSide = new ColoredRectangularSide(red, lowerSide.getCoordinate(2),lowerSide.getCoordinate(1), leftSide.getCoordinate(3),leftSide.getCoordinate(2) );
+		
+		// Verbindungsfläche Oberseite - Rand links
+		ColoredRectangularSide upperLeftSide = new ColoredRectangularSide(red, upperSide.getCoordinate(2),upperSide.getCoordinate(1), leftSide.getCoordinate(1),leftSide.getCoordinate(0) );
+
+		// Verbindungsfläche Unterseite - Rand vorne
+		ColoredRectangularSide lowerFrontSide = new ColoredRectangularSide(red,lowerSide.getCoordinate(1),lowerSide.getCoordinate(0), frontSide.getCoordinate(2),frontSide.getCoordinate(1) );
+		
+		// Verbindungsfläche Oberseite - Rand vorne
+		ColoredRectangularSide upperFrontSide = new ColoredRectangularSide(red,upperSide.getCoordinate(3),upperSide.getCoordinate(2), frontSide.getCoordinate(0),frontSide.getCoordinate(3) );
+
+		// Verbindungsfläche Unterseite - Rand rechts
+		ColoredRectangularSide lowerRightSide = new ColoredRectangularSide(red,lowerSide.getCoordinate(0),lowerSide.getCoordinate(3), rightSide.getCoordinate(1),rightSide.getCoordinate(0) );
+		
+		// Verbindungsfläche Oberseite - Rand rechts
+		ColoredRectangularSide upperRightSide = new ColoredRectangularSide(red,upperSide.getCoordinate(0),upperSide.getCoordinate(3), rightSide.getCoordinate(3),rightSide.getCoordinate(2) );
+
+		// Verbindungsfläche Unterseite - Rand hinten
+		ColoredRectangularSide lowerBackSide = new ColoredRectangularSide(red,lowerSide.getCoordinate(3),lowerSide.getCoordinate(2), backSide.getCoordinate(2),backSide.getCoordinate(1) );
+		
+		// Verbindungsfläche Oberseite - Rand hinten
+		ColoredRectangularSide upperBackSide = new ColoredRectangularSide(red,upperSide.getCoordinate(1),upperSide.getCoordinate(0), backSide.getCoordinate(0),backSide.getCoordinate(3) );
+
+		// Verbindungsfläche Rand links - Rand vorne
+		ColoredRectangularSide leftFrontSide = new ColoredRectangularSide(red,leftSide.getCoordinate(0),leftSide.getCoordinate(3), frontSide.getCoordinate(1),frontSide.getCoordinate(0) );
+
+		// Verbindungsfläche Rand vorne - Rand rechts
+		ColoredRectangularSide frontRightSide = new ColoredRectangularSide(red,frontSide.getCoordinate(3),frontSide.getCoordinate(2), rightSide.getCoordinate(0),rightSide.getCoordinate(3) );
+
+		// Verbindungsfläche Rand rechts - Rand hinten
+		ColoredRectangularSide rightBackSide = new ColoredRectangularSide(red,rightSide.getCoordinate(2),rightSide.getCoordinate(1), backSide.getCoordinate(1),backSide.getCoordinate(0) );
+
+		// Verbindungsfläche Rand hinten - Rand links
+		ColoredRectangularSide backLeftSide = new ColoredRectangularSide(red,backSide.getCoordinate(3),backSide.getCoordinate(2), leftSide.getCoordinate(2),leftSide.getCoordinate(1) );
+
+		// Ecke oben, vorne, links
+		ColoredTriangularSide corner1 = new ColoredTriangularSide(red,leftSide.getCoordinate(0),frontSide.getCoordinate(0), upperSide.getCoordinate(2) );
+
+		// Ecke oben, vorne, rechts
+		ColoredTriangularSide corner2 = new ColoredTriangularSide(red,frontSide.getCoordinate(3),rightSide.getCoordinate(3), upperSide.getCoordinate(3) );
+
+		// Ecke oben, hinten, rechts
+		ColoredTriangularSide corner3 = new ColoredTriangularSide(red,rightSide.getCoordinate(2),backSide.getCoordinate(0), upperSide.getCoordinate(0) );
+
+		// Ecke oben, hinten, links
+		ColoredTriangularSide corner4 = new ColoredTriangularSide(red,backSide.getCoordinate(3),leftSide.getCoordinate(1), upperSide.getCoordinate(1) );
+
+		// Ecke unten, vorne, links
+		ColoredTriangularSide corner5 = new ColoredTriangularSide(red,frontSide.getCoordinate(1),leftSide.getCoordinate(3), lowerSide.getCoordinate(1) );
+
+		// Ecke unten, vorne, rechts
+		ColoredTriangularSide corner6 = new ColoredTriangularSide(red,rightSide.getCoordinate(0),frontSide.getCoordinate(2), lowerSide.getCoordinate(0) );
+
+		// Ecke unten, hinten, rechts
+		ColoredTriangularSide corner7 = new ColoredTriangularSide(red,backSide.getCoordinate(1),rightSide.getCoordinate(1), lowerSide.getCoordinate(3) );
+
+		// Ecke unten, hinten, links
+		ColoredTriangularSide corner8 = new ColoredTriangularSide(red,leftSide.getCoordinate(2),backSide.getCoordinate(2), lowerSide.getCoordinate(2) );
+		
+		
 		Transform3D rot = new Transform3D();
 		rot.rotX(Math.PI * 40.0 / 180.0);
 		Transform3D rotY = new Transform3D();
@@ -171,15 +251,50 @@ public class BoardApplet extends Applet {
 		tg.addChild(backSide);
 		tg.addChild(frontSide);
 		
+		tg.addChild(lowerLeftSide);
+		tg.addChild(upperLeftSide);
+		tg.addChild(lowerFrontSide);
+		tg.addChild(upperFrontSide);
+		tg.addChild(lowerRightSide);
+		tg.addChild(upperRightSide);
+		tg.addChild(lowerBackSide);
+		tg.addChild(upperBackSide);
 		
+		tg.addChild(leftFrontSide);
+		tg.addChild(frontRightSide);
+		tg.addChild(rightBackSide);
+		tg.addChild(backLeftSide);
+		
+		tg.addChild(corner1);
+		tg.addChild(corner2);
+		tg.addChild(corner3);
+		tg.addChild(corner4);
+		tg.addChild(corner5);
+		tg.addChild(corner6);
+		tg.addChild(corner7);
+		tg.addChild(corner8);		
 		
 		for (int i=0; i<pawns.length; i++){
 			for (int j=0; j<pawns[i].length; j++){
-				pawns[i][j] = new Pawn(i, j, y, 0.01575f, 0.0405f);
+				pawns[i][j] = new Pawn(i, j, y + gap, 0.01575f, 0.0405f);
 				
 				tg.addChild(pawns[i][j]);
 			}
 		}
+		
+		BoundingSphere bounds = new BoundingSphere(new Point3d(0.0,0.0,0.0), 100.0);
+		
+		MouseRotate rotBehavior = new MouseRotate();
+		rotBehavior.setTransformGroup(tg);
+		tg.addChild(rotBehavior);
+		rotBehavior.setSchedulingBounds( bounds );
+		
+		MouseZoom zoomBehavior = new MouseZoom();
+		zoomBehavior.setTransformGroup(tg);
+		zoomBehavior.setSchedulingBounds(bounds);
+		tg.addChild(zoomBehavior);
+		
+		
 		
 		buildTransformations();
 		resetPawns();
@@ -250,28 +365,31 @@ public class BoardApplet extends Applet {
 				startTransforms[i][j] = new Transform3D();
 				
 			// Rot
-			startTransforms[Constants.RED][0].setTranslation(new Vector3d(-0.1365,0,-0.1365));
-			startTransforms[Constants.RED][1].setTranslation(new Vector3d(-0.1815,0,-0.1365));
-			startTransforms[Constants.RED][2].setTranslation(new Vector3d(-0.1365,0,-0.1815));
-			startTransforms[Constants.RED][3].setTranslation(new Vector3d(-0.1815,0,-0.1815));
-										
+			startTransforms[Constants.RED][1].setTranslation(new Vector3d(-0.1365,0,0.1345));
+			startTransforms[Constants.RED][0].setTranslation(new Vector3d(-0.1365,0,0.1795));
+			startTransforms[Constants.RED][2].setTranslation(new Vector3d(-0.1815,0,0.1345));
+			startTransforms[Constants.RED][3].setTranslation(new Vector3d(-0.1815,0,0.1795));		
+		
 			// Schwarz
-			startTransforms[Constants.BLACK][0].setTranslation(new Vector3d(0.1345,0,-0.1365));
-			startTransforms[Constants.BLACK][1].setTranslation(new Vector3d(0.1345,0,-0.1815));
-			startTransforms[Constants.BLACK][2].setTranslation(new Vector3d(0.1795,0,-0.1365));
-			startTransforms[Constants.BLACK][3].setTranslation(new Vector3d(0.1795,0,-0.1815));			
-
+			startTransforms[Constants.BLACK][1].setTranslation(new Vector3d(-0.1365,0,-0.1365));
+			startTransforms[Constants.BLACK][0].setTranslation(new Vector3d(-0.1815,0,-0.1365));
+			startTransforms[Constants.BLACK][2].setTranslation(new Vector3d(-0.1365,0,-0.1815));
+			startTransforms[Constants.BLACK][3].setTranslation(new Vector3d(-0.1815,0,-0.1815));
+										
 			// Blau
-			startTransforms[Constants.BLUE][0].setTranslation(new Vector3d(0.1345,0,0.1345));
-			startTransforms[Constants.BLUE][1].setTranslation(new Vector3d(0.1795,0,0.1345));
-			startTransforms[Constants.BLUE][2].setTranslation(new Vector3d(0.1345,0,0.1795));
-			startTransforms[Constants.BLUE][3].setTranslation(new Vector3d(0.1795,0,0.1795));
-			
+			startTransforms[Constants.BLUE][1].setTranslation(new Vector3d(0.1345,0,-0.1365));
+			startTransforms[Constants.BLUE][0].setTranslation(new Vector3d(0.1345,0,-0.1815));
+			startTransforms[Constants.BLUE][2].setTranslation(new Vector3d(0.1795,0,-0.1365));
+			startTransforms[Constants.BLUE][3].setTranslation(new Vector3d(0.1795,0,-0.1815));			
+
 			// Grün
-			startTransforms[Constants.GREEN][0].setTranslation(new Vector3d(-0.1365,0,0.1345));
-			startTransforms[Constants.GREEN][1].setTranslation(new Vector3d(-0.1365,0,0.1795));
-			startTransforms[Constants.GREEN][2].setTranslation(new Vector3d(-0.1815,0,0.1345));
-			startTransforms[Constants.GREEN][3].setTranslation(new Vector3d(-0.1815,0,0.1795));
+			startTransforms[Constants.GREEN][1].setTranslation(new Vector3d(0.1345,0,0.1345));
+			startTransforms[Constants.GREEN][0].setTranslation(new Vector3d(0.1795,0,0.1345));
+			startTransforms[Constants.GREEN][2].setTranslation(new Vector3d(0.1345,0,0.1795));
+			startTransforms[Constants.GREEN][3].setTranslation(new Vector3d(0.1795,0,0.1795));
+			
+			
+			
 			
 		// Transformationen Zielbereich
 		for (int i=0; i < destinationTransforms.length; i++)
@@ -279,219 +397,85 @@ public class BoardApplet extends Applet {
 				destinationTransforms[i][j] = new Transform3D();
 			
 			// Rot
-			destinationTransforms[Constants.RED][0].setTranslation(new Vector3d(-0.1815,0,-0.0015));
-			destinationTransforms[Constants.RED][1].setTranslation(new Vector3d(-0.1365,0,-0.0015));
-			destinationTransforms[Constants.RED][2].setTranslation(new Vector3d(-0.0915,0,-0.0015));
-			destinationTransforms[Constants.RED][3].setTranslation(new Vector3d(-0.0465,0,-0.0015));
-			
-			// Schwarz
-			destinationTransforms[Constants.BLACK][0].setTranslation(new Vector3d(-0.0015,0,-0.1815));
-			destinationTransforms[Constants.BLACK][1].setTranslation(new Vector3d(-0.0015,0,-0.1365));
-			destinationTransforms[Constants.BLACK][2].setTranslation(new Vector3d(-0.0015,0,-0.0915));
-			destinationTransforms[Constants.BLACK][3].setTranslation(new Vector3d(-0.0015,0,-0.0465));			
-	
-			// Blau
-			destinationTransforms[Constants.BLUE][0].setTranslation(new Vector3d(0.1795,0,-0.0005));
-			destinationTransforms[Constants.BLUE][1].setTranslation(new Vector3d(0.1345,0,-0.0005));
-			destinationTransforms[Constants.BLUE][2].setTranslation(new Vector3d(0.0895,0,-0.0005));
-			destinationTransforms[Constants.BLUE][3].setTranslation(new Vector3d(0.0445,0,-0.0005));
-			
-			// Grün
-			destinationTransforms[Constants.GREEN][0].setTranslation(new Vector3d(-0.0015,0,0.1795));
-			destinationTransforms[Constants.GREEN][1].setTranslation(new Vector3d(-0.0015,0,0.1345));
-			destinationTransforms[Constants.GREEN][2].setTranslation(new Vector3d(-0.0015,0,0.0895));
-			destinationTransforms[Constants.GREEN][3].setTranslation(new Vector3d(-0.0015,0,0.0445));		
 		
+			destinationTransforms[Constants.RED][0].setTranslation(new Vector3d(-0.0015,0,0.1795));
+			destinationTransforms[Constants.RED][1].setTranslation(new Vector3d(-0.0015,0,0.1345));
+			destinationTransforms[Constants.RED][2].setTranslation(new Vector3d(-0.0015,0,0.0895));
+			destinationTransforms[Constants.RED][3].setTranslation(new Vector3d(-0.0015,0,0.0445));			
+
+			// Schwarz
+			destinationTransforms[Constants.BLACK][0].setTranslation(new Vector3d(-0.1815,0,-0.0015));
+			destinationTransforms[Constants.BLACK][1].setTranslation(new Vector3d(-0.1365,0,-0.0015));
+			destinationTransforms[Constants.BLACK][2].setTranslation(new Vector3d(-0.0915,0,-0.0015));
+			destinationTransforms[Constants.BLACK][3].setTranslation(new Vector3d(-0.0465,0,-0.0015));
+
+			// Blau
+			destinationTransforms[Constants.BLUE][0].setTranslation(new Vector3d(-0.0015,0,-0.1815));
+			destinationTransforms[Constants.BLUE][1].setTranslation(new Vector3d(-0.0015,0,-0.1365));
+			destinationTransforms[Constants.BLUE][2].setTranslation(new Vector3d(-0.0015,0,-0.0915));
+			destinationTransforms[Constants.BLUE][3].setTranslation(new Vector3d(-0.0015,0,-0.0465));			
+	
+			// Grün
+			destinationTransforms[Constants.GREEN][0].setTranslation(new Vector3d(0.1795,0,-0.0005));
+			destinationTransforms[Constants.GREEN][1].setTranslation(new Vector3d(0.1345,0,-0.0005));
+			destinationTransforms[Constants.GREEN][2].setTranslation(new Vector3d(0.0895,0,-0.0005));
+			destinationTransforms[Constants.GREEN][3].setTranslation(new Vector3d(0.0445,0,-0.0005));
+			
 		// Transformationen Rundstrecke
 		for (int i=0; i<trackTransforms.length; i++)
 			trackTransforms[i] = new Transform3D();
 		
 			// Rot
-			trackTransforms[Constants.RED * 10    ].setTranslation(new Vector3d(-0.2265,0,-0.0465f));
-			trackTransforms[Constants.RED * 10 + 1].setTranslation(new Vector3d(-0.181,0,-0.0465f));
-			trackTransforms[Constants.RED * 10 + 2].setTranslation(new Vector3d(-0.1365,0,-0.0465f));
-			trackTransforms[Constants.RED * 10 + 3].setTranslation(new Vector3d(-0.0915,0,-0.0465f));
-			trackTransforms[Constants.RED * 10 + 4].setTranslation(new Vector3d(-0.0465,0,-0.0465));
-			trackTransforms[Constants.RED * 10 + 5].setTranslation(new Vector3d(-0.0465,0,-0.0915));
-			trackTransforms[Constants.RED * 10 + 6].setTranslation(new Vector3d(-0.0465,0,-0.1365));
-			trackTransforms[Constants.RED * 10 + 7].setTranslation(new Vector3d(-0.0465,0,-0.1815));
-			trackTransforms[Constants.RED * 10 + 8].setTranslation(new Vector3d(-0.0465,0,-0.2265));
-			trackTransforms[Constants.RED * 10 + 9].setTranslation(new Vector3d(-0.0015,0,-0.2265));
-
+			trackTransforms[Constants.RED * 10    ].setTranslation(new Vector3d(-0.0465,0,0.2245));
+			trackTransforms[Constants.RED * 10 + 1].setTranslation(new Vector3d(-0.0465,0,0.1795));
+			trackTransforms[Constants.RED * 10 + 2].setTranslation(new Vector3d(-0.0465,0,0.1345));
+			trackTransforms[Constants.RED * 10 + 3].setTranslation(new Vector3d(-0.0465,0,0.0895));
+			trackTransforms[Constants.RED * 10 + 4].setTranslation(new Vector3d(-0.0465,0,0.0445));
+			trackTransforms[Constants.RED * 10 + 5].setTranslation(new Vector3d(-0.0915,0,0.0445f));
+			trackTransforms[Constants.RED * 10 + 6].setTranslation(new Vector3d(-0.1365,0,0.0445f));
+			trackTransforms[Constants.RED * 10 + 7].setTranslation(new Vector3d(-0.181,0,0.0445f));
+			trackTransforms[Constants.RED * 10 + 8].setTranslation(new Vector3d(-0.2265,0,0.0445f));
+			trackTransforms[Constants.RED * 10 + 9].setTranslation(new Vector3d(-0.2265,0,-0.0015f));					
+		
+		
 			// Schwarz
-			trackTransforms[Constants.BLACK * 10    ].setTranslation(new Vector3d(0.0445,0,-0.2265));
-			trackTransforms[Constants.BLACK * 10 + 1].setTranslation(new Vector3d(0.0445,0,-0.1815));
-			trackTransforms[Constants.BLACK * 10 + 2].setTranslation(new Vector3d(0.0445,0,-0.1365));
-			trackTransforms[Constants.BLACK * 10 + 3].setTranslation(new Vector3d(0.0445,0,-0.0915));
-			trackTransforms[Constants.BLACK * 10 + 4].setTranslation(new Vector3d(0.0445,0,-0.0455));
-			trackTransforms[Constants.BLACK * 10 + 5].setTranslation(new Vector3d(0.0895,0,-0.0455));
-			trackTransforms[Constants.BLACK * 10 + 6].setTranslation(new Vector3d(0.1345,0,-0.0455));
-			trackTransforms[Constants.BLACK * 10 + 7].setTranslation(new Vector3d(0.1795,0,-0.0455));
-			trackTransforms[Constants.BLACK * 10 + 8].setTranslation(new Vector3d(0.2245,0,-0.0455));
-			trackTransforms[Constants.BLACK * 10 + 9].setTranslation(new Vector3d(0.2245,0,-0.0005));
+			trackTransforms[Constants.BLACK * 10    ].setTranslation(new Vector3d(-0.2265,0,-0.0465f));
+			trackTransforms[Constants.BLACK * 10 + 1].setTranslation(new Vector3d(-0.181,0,-0.0465f));
+			trackTransforms[Constants.BLACK * 10 + 2].setTranslation(new Vector3d(-0.1365,0,-0.0465f));
+			trackTransforms[Constants.BLACK * 10 + 3].setTranslation(new Vector3d(-0.0915,0,-0.0465f));
+			trackTransforms[Constants.BLACK * 10 + 4].setTranslation(new Vector3d(-0.0465,0,-0.0465));
+			trackTransforms[Constants.BLACK * 10 + 5].setTranslation(new Vector3d(-0.0465,0,-0.0915));
+			trackTransforms[Constants.BLACK * 10 + 6].setTranslation(new Vector3d(-0.0465,0,-0.1365));
+			trackTransforms[Constants.BLACK * 10 + 7].setTranslation(new Vector3d(-0.0465,0,-0.1815));
+			trackTransforms[Constants.BLACK * 10 + 8].setTranslation(new Vector3d(-0.0465,0,-0.2265));
+			trackTransforms[Constants.BLACK * 10 + 9].setTranslation(new Vector3d(-0.0015,0,-0.2265));
 
 			// Blau
-			trackTransforms[Constants.BLUE * 10    ].setTranslation(new Vector3d(0.2245,0,0.0445));
-			trackTransforms[Constants.BLUE * 10 + 1].setTranslation(new Vector3d(0.1795,0,0.0445));
-			trackTransforms[Constants.BLUE * 10 + 2].setTranslation(new Vector3d(0.1345,0,0.0445));
-			trackTransforms[Constants.BLUE * 10 + 3].setTranslation(new Vector3d(0.0895,0,0.0445));
-			trackTransforms[Constants.BLUE * 10 + 4].setTranslation(new Vector3d(0.0445,0,0.0445));
-			trackTransforms[Constants.BLUE * 10 + 5].setTranslation(new Vector3d(0.0445,0,0.0895));
-			trackTransforms[Constants.BLUE * 10 + 6].setTranslation(new Vector3d(0.0445,0,0.1345));
-			trackTransforms[Constants.BLUE * 10 + 7].setTranslation(new Vector3d(0.0445,0,0.1795));
-			trackTransforms[Constants.BLUE * 10 + 8].setTranslation(new Vector3d(0.0445,0,0.2245));
-			trackTransforms[Constants.BLUE * 10 + 9].setTranslation(new Vector3d(-0.0015,0,0.2245));
-			
+			trackTransforms[Constants.BLUE * 10    ].setTranslation(new Vector3d(0.0445,0,-0.2265));
+			trackTransforms[Constants.BLUE * 10 + 1].setTranslation(new Vector3d(0.0445,0,-0.1815));
+			trackTransforms[Constants.BLUE * 10 + 2].setTranslation(new Vector3d(0.0445,0,-0.1365));
+			trackTransforms[Constants.BLUE * 10 + 3].setTranslation(new Vector3d(0.0445,0,-0.0915));
+			trackTransforms[Constants.BLUE * 10 + 4].setTranslation(new Vector3d(0.0445,0,-0.0455));
+			trackTransforms[Constants.BLUE * 10 + 5].setTranslation(new Vector3d(0.0895,0,-0.0455));
+			trackTransforms[Constants.BLUE * 10 + 6].setTranslation(new Vector3d(0.1345,0,-0.0455));
+			trackTransforms[Constants.BLUE * 10 + 7].setTranslation(new Vector3d(0.1795,0,-0.0455));
+			trackTransforms[Constants.BLUE * 10 + 8].setTranslation(new Vector3d(0.2245,0,-0.0455));
+			trackTransforms[Constants.BLUE * 10 + 9].setTranslation(new Vector3d(0.2245,0,-0.0005));
+
 			// Grün
-			trackTransforms[Constants.GREEN * 10    ].setTranslation(new Vector3d(-0.0465,0,0.2245));
-			trackTransforms[Constants.GREEN * 10 + 1].setTranslation(new Vector3d(-0.0465,0,0.1795));
-			trackTransforms[Constants.GREEN * 10 + 2].setTranslation(new Vector3d(-0.0465,0,0.1345));
-			trackTransforms[Constants.GREEN * 10 + 3].setTranslation(new Vector3d(-0.0465,0,0.0895));
-			trackTransforms[Constants.GREEN * 10 + 4].setTranslation(new Vector3d(-0.0465,0,0.0445));
-			trackTransforms[Constants.GREEN * 10 + 5].setTranslation(new Vector3d(-0.0915,0,0.0445f));
-			trackTransforms[Constants.GREEN * 10 + 6].setTranslation(new Vector3d(-0.1365,0,0.0445f));
-			trackTransforms[Constants.GREEN * 10 + 7].setTranslation(new Vector3d(-0.181,0,0.0445f));
-			trackTransforms[Constants.GREEN * 10 + 8].setTranslation(new Vector3d(-0.2265,0,0.0445f));
-			trackTransforms[Constants.GREEN * 10 + 9].setTranslation(new Vector3d(-0.2265,0,-0.0015f));			
-	}
-	
-	private static class TexturedRectangularSide extends Shape3D {
-		
-		public static int XY_PLANE = 0;
-		public static int ZY_PLANE = 1;
-		public static int ZX_PLANE = 2;
-		
-		public TexturedRectangularSide(String texFilename, int plane, float x, float y, float z){
-			this.setGeometry(buildGeometry(plane, x, y, z));
-			this.setAppearance(texFilename);
-			this.setCapability(Shape3D.ALLOW_GEOMETRY_READ);
-			this.setCapability(Shape3D.ALLOW_GEOMETRY_WRITE);
-			this.setCapability(Shape3D.ALLOW_PICKABLE_READ);
-			this.setCapability(Shape3D.ALLOW_PICKABLE_WRITE);
-			this.setCapability(Shape3D.ENABLE_PICK_REPORTING);
-			PickTool.setCapabilities(this, PickTool.INTERSECT_FULL);
-		}
-				
-		public void setAppearance (String fname){
-			this.setAppearance(buildAppearance(fname));
-		}
-		
-		public Geometry buildGeometry (int plane, float x, float y, float z){
-			QuadArray side = new QuadArray(4, GeometryArray.COORDINATES|GeometryArray.TEXTURE_COORDINATE_2);
-			
-			Point3f uPoint = new Point3f();
-			Point2f tPoint = new Point2f();
-			
-			// Universumskoordinaten erstellen
-			uPoint.set((plane==XY_PLANE) ? -x : x , y, (plane==XY_PLANE) ? z : -z );
-			side.setCoordinate(0, uPoint);
-			
-			uPoint.set((plane==ZY_PLANE) ? x : -x , (plane==ZX_PLANE) ? y : -y, (plane==XY_PLANE) ? z : -z );
-			side.setCoordinate(1, uPoint);
-			
-			uPoint.set((plane==ZX_PLANE) ? -x : x , (plane==ZX_PLANE) ? y : -y, z);
-			side.setCoordinate(2, uPoint);
-			
-			uPoint.set(x , y, z);
-			side.setCoordinate(3, uPoint);
-			
-			// Texturkoordinaten generieren
-			tPoint.set(0.0f, 1.0f);
-			side.setTextureCoordinate(3, tPoint);
-		
-			tPoint.set(0.0f, 0.0f);
-			side.setTextureCoordinate(0, tPoint);
-			
-			tPoint.set(1.0f, 0.0f);
-			side.setTextureCoordinate(1, tPoint);
-			
-			tPoint.set(1.0f, 1.0f);
-			side.setTextureCoordinate(2, tPoint);
-		
-			return side;
-		}
-		
-		public Appearance buildAppearance (String fname){
-			Appearance a = new Appearance();
-			
-			PolygonAttributes pa = new PolygonAttributes();
-			pa.setCullFace(PolygonAttributes.CULL_NONE);
-			a.setPolygonAttributes(pa);
-			
-			TextureLoader loader = new NewTextureLoader(fname);
-			ImageComponent2D img = loader.getImage();
-			
-			Texture2D tex = new Texture2D(Texture.BASE_LEVEL, Texture.RGB, img.getWidth(), img.getHeight());
-			tex.setImage(0, img);
-			tex.setEnable(true);
-			
-			a.setTexture(tex);
-			
-			return a;
-		}
+			trackTransforms[Constants.GREEN * 10    ].setTranslation(new Vector3d(0.2245,0,0.0445));
+			trackTransforms[Constants.GREEN * 10 + 1].setTranslation(new Vector3d(0.1795,0,0.0445));
+			trackTransforms[Constants.GREEN * 10 + 2].setTranslation(new Vector3d(0.1345,0,0.0445));
+			trackTransforms[Constants.GREEN * 10 + 3].setTranslation(new Vector3d(0.0895,0,0.0445));
+			trackTransforms[Constants.GREEN * 10 + 4].setTranslation(new Vector3d(0.0445,0,0.0445));
+			trackTransforms[Constants.GREEN * 10 + 5].setTranslation(new Vector3d(0.0445,0,0.0895));
+			trackTransforms[Constants.GREEN * 10 + 6].setTranslation(new Vector3d(0.0445,0,0.1345));
+			trackTransforms[Constants.GREEN * 10 + 7].setTranslation(new Vector3d(0.0445,0,0.1795));
+			trackTransforms[Constants.GREEN * 10 + 8].setTranslation(new Vector3d(0.0445,0,0.2245));
+			trackTransforms[Constants.GREEN * 10 + 9].setTranslation(new Vector3d(-0.0015,0,0.2245));
 			
 	}
 
-	private static class ColoredRectangularSide extends Shape3D{
-
-		public static int XY_PLANE = 0;
-		public static int ZY_PLANE = 1;
-		public static int ZX_PLANE = 2;
-		
-		public ColoredRectangularSide(Color3f color, int plane, float x, float y, float z){
-			this.setGeometry(buildGeometry(plane, x, y, z));
-			this.setAppearance(color);
-			this.setCapability(Shape3D.ALLOW_GEOMETRY_READ);
-			this.setCapability(Shape3D.ALLOW_GEOMETRY_WRITE);
-			this.setCapability(Shape3D.ALLOW_PICKABLE_READ);
-			this.setCapability(Shape3D.ALLOW_PICKABLE_WRITE);
-			this.setCapability(Shape3D.ENABLE_PICK_REPORTING);
-			PickTool.setCapabilities(this, PickTool.INTERSECT_FULL);
-		}
-				
-		public void setAppearance (Color3f color){
-			this.setAppearance(buildAppearance(color));
-		}
-		
-		public Geometry buildGeometry (int plane, float x, float y, float z){
-			QuadArray side = new QuadArray(4, GeometryArray.COORDINATES);
-			
-			Point3f uPoint = new Point3f();
-			Point2f tPoint = new Point2f();
-			
-			// Universumskoordinaten erstellen
-			uPoint.set((plane==XY_PLANE) ? -x : x , y, (plane==XY_PLANE) ? z : -z );
-			side.setCoordinate(0, uPoint);
-			
-			uPoint.set((plane==ZY_PLANE) ? x : -x , (plane==ZX_PLANE) ? y : -y, (plane==XY_PLANE) ? z : -z );
-			side.setCoordinate(1, uPoint);
-			
-			uPoint.set((plane==ZX_PLANE) ? -x : x , (plane==ZX_PLANE) ? y : -y, z);
-			side.setCoordinate(2, uPoint);
-			
-			uPoint.set(x , y, z);
-			side.setCoordinate(3, uPoint);
-			
-			
-			return side;
-		}
-		
-		public Appearance buildAppearance (Color3f color){
-			Appearance a = new Appearance();
-			
-			float shading = 0.3f;		
-			ColoringAttributes ca = new ColoringAttributes(color, ColoringAttributes.SHADE_GOURAUD);
-			Material m = new Material(color, new Color3f(color.x * shading, color.y * shading, color.z * shading), color, color, 50f);
-			
-			PolygonAttributes pa = new PolygonAttributes(PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0.0f);
-                  
-			a.setColoringAttributes(ca);
-			a.setPolygonAttributes(pa);
-			return a;
-		}
-	
-	}
-	
 	private class PickPawnBehavior extends PickMouseBehavior{
 		
 		public PickPawnBehavior (Canvas3D canvas, BranchGroup root, Bounds bounds, int mode, float tolerance){

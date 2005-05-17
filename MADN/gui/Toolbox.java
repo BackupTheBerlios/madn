@@ -31,6 +31,20 @@ import javax.swing.ImageIcon;
 public class Toolbox {
 
 	/**
+	 * Laden eines FH-Logo.
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene ImageIcon.
+	 */
+	static public ImageIcon loadLogoIcon(Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images","fhlogo.gif", clazz);
+		  if (img != null)
+			  return  new ImageIcon(img);
+	  }catch (IOException e){};
+		return null;
+	}
+	
+	/**
 	 * Laden eines Close-Icons(16*16).
 	 * @param clazz = Class von einer Componente.
 	 * @return Das geladene ImageIcon.
