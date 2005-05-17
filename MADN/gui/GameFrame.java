@@ -64,6 +64,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   
   private int selectedPiece = -1;
   private JDesktopPane desktop = null;
+  private Server server = null;
   
   public GameFrame(Client client) {
     
@@ -71,6 +72,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   	this.client = client;
   	
   	try {
+  	    client.setClientListener(this);
 		clientColor = client.getColor();
 		nickname = client.getNickname();
 	} catch (RemoteException e1) {
