@@ -6,6 +6,7 @@
  */
 package gui;
 
+import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -32,10 +33,9 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 	// Würfelergebnis
 	private int dice = 0;
 	
-	public ClientImpl(Server server, int color, String nickName) throws RemoteException{
-		this(color, nickName);
-		this.server = server;
-		
+	public ClientImpl(String serverhost, String servername, String nickName) throws RemoteException, Exception {
+		this.server = (Server)Naming.lookup("//" + serverhost + "/" + servername);
+		this.server.newClient(this);
 	}
 	
 	public ClientImpl(int color, String nickName) throws RemoteException{
@@ -73,6 +73,10 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 	}
 	
 	public static void main(String[] args) {
+	}
+	
+	public void setColor(int color) throws RemoteException {
+	    this.color = color;
 	}
 
 	public void setStatus (int status) throws RemoteException{

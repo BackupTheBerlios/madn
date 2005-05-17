@@ -6,13 +6,15 @@
  */
 package model;
 
+import java.io.Serializable;
+
 /**
  * @author Mario
  *
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class Space {
+public class Space implements Serializable {
 	
 	private int position;
 	private Piece piece = null;

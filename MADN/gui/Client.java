@@ -32,6 +32,7 @@ public interface Client extends Remote {
 	public void decrementAttempts() throws RemoteException;
 	public int getAttempts() throws RemoteException;
 	public boolean hasAttemptsLeft () throws RemoteException;
+	public void setColor(int color) throws RemoteException;
 	public int getDiceResult () throws RemoteException;
 	public void setDiceResult (int dice) throws RemoteException;
 	public boolean existsServer() throws RemoteException;
