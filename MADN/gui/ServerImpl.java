@@ -6,9 +6,11 @@
  */
 package gui;
 
+import java.io.File;
+import java.io.IOException;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-
 import model.BoardModel;
 import model.Constants;
 import model.InvalidMoveException;
@@ -29,10 +31,30 @@ public class ServerImpl extends ClientImpl implements Server {
 	// Liste der verfügbaren Spielerfarben
 	private ArrayList colors; 
 	// Wird aktuell gespielt?
-	private boolean busy = false;  	
+	private boolean busy = false;
+	// RMI-Prozess
+	private Process rmiProcess = null;
+	// Der Servername
+	private String servername = "";
 
-	public ServerImpl(String nickname) throws RemoteException {
+	public ServerImpl(String servername, String nickname) throws RemoteException, Exception {
 		super(Constants.RED, nickname);
+		this.servername = servername;
+        File rmiFile = new File(System.getProperty("java.home") + File.separator + "bin" + File.separator + "rmiregistry.exe");
+        File libDir = new File(System.getProperty("java.home") + File.separator + "lib");
+        if(rmiFile.exists() && libDir.exists()) {
+            try {
+                rmiProcess = Runtime.getRuntime().exec(rmiFile.getAbsolutePath() + " -J-classpath -J\"" + libDir.getAbsolutePath() + "\"");
+				Naming.rebind(servername, this);
+            } catch(IOException exc) {
+                throw new Exception("RMI-Registry konnte nicht gestartet werden.");
+            } catch(RuntimeException re) {
+                rmiProcess.destroy();
+                throw new Exception("Der Server konnte bei 'rmiregistry' nicht angemeldet werden.");
+            }
+        } else {
+			throw new Exception("RMI-Registry wurde nicht gefunden.");
+        }
 		setServer(this);
 		clients[Constants.RED] = this;
 		bm = new BoardModel();
@@ -40,26 +62,22 @@ public class ServerImpl extends ClientImpl implements Server {
 		sendRadioMessage("Spieler " + nickname + " [" + Toolbox.colorToString(Constants.RED) + "] hat sich angemeldet.");
 	}
 
-	public Client newClient (String nickname) throws RemoteException{
-		Client c = null;
-		
+	public void newClient(Client newClient) throws RemoteException, Exception {
 		int color = getNextAvailableColor();
 		
 		if (color != -1){
 			if (!busy){
-				c = new ClientImpl(this, color, nickname);
-				clients[color] = c;
-				sendRadioMessage(nickname + " [" + Toolbox.colorToString(color) + "] hat sich angemeldet.");
+			    newClient.setColor(color);
+				clients[color] = newClient;
+				sendRadioMessage(newClient.getNickname() + " [" + Toolbox.colorToString(color) + "] hat sich angemeldet.");
 			} else {
-				// TODO Exception: Spiel läuft
+				throw new Exception("Spiel läuft bereits.");
 			}
-		}else{
-			// TODO Exception: Server ausgelastet
+		} else {
+			throw new Exception("Server ausgelastet.");
 		}
-		
-		return c;
 	}
-	
+
 	private void removeServer (){
 		for (int i=0; i<clients.length; i++){
 			if (clients[i] != null){
@@ -71,8 +89,10 @@ public class ServerImpl extends ClientImpl implements Server {
 				}
 			}
 		}
+	    try { Naming.unbind(servername); } catch(Exception exc) {}
+	    rmiProcess.destroy();
 	}
-	
+
 	public void removeClient (int id){
 		if ((id >= 0) && (id < 4)){
 			if (clients[id] != null){
@@ -344,5 +364,4 @@ public class ServerImpl extends ClientImpl implements Server {
 	public Piece[][] getPieces() throws RemoteException {
 		return bm.getPieces();
 	}
-
 }

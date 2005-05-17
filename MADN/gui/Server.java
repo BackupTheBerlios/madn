@@ -18,7 +18,7 @@ import model.Piece;
  */
 public interface Server extends Remote {
 	
-	public Client newClient(String nickName) throws RemoteException;
+	public void newClient(Client newCient) throws RemoteException, Exception;
 	
 	public void removeClient(int id) throws RemoteException;
 	
@@ -35,4 +35,5 @@ public interface Server extends Remote {
 	public void startNewGame() throws RemoteException;
 	
 	public Piece[][] getPieces() throws RemoteException;
+
 }

@@ -239,7 +239,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     
 	try {
 		
-		Server s = new ServerImpl("Mario");
+		Server s = new ServerImpl("madn", "Mario");
 		f1 = new GameFrame((Client)s);
 		((Client)s).setClientListener(f1);
 		
@@ -247,7 +247,8 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			Thread.sleep(2000);
 		} catch (InterruptedException e1){}
 		
-		Client c = s.newClient("Robert");
+		Client c = new ClientImpl("localhost", "madn", "Robert");
+		s.newClient(c);
 		f2 = new GameFrame(c);
 		c.setClientListener(f2);
 //		
@@ -262,9 +263,10 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		
 	} catch (RemoteException e) {
 		e.printStackTrace();
+	} catch (Exception e) {
+		e.printStackTrace();
 	}
 	
-  
   }
 
   private JMenuBar createMenuBar(){
