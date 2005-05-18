@@ -121,7 +121,6 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 
 	public void recieveMessage(String msg) throws RemoteException {
 		listener.showMessage(msg);
-		
 	}
 	
 	public boolean hasAttemptsLeft () throws RemoteException{

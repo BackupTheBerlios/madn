@@ -205,7 +205,7 @@ public class ServerImpl extends ClientImpl implements Server {
 							clients[activeClient].recieveMessage(e.getMessage());
 						}
 						
-						throw (e);
+						//throw (e);
 					}
 				}else{ // clients[activeClient].getStatus() == Constants.ACTIVE_MOVE
 					sendRadioMessage("Debug: Du bist nicht am Zug.");
