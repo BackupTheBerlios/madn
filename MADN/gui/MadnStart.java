@@ -193,7 +193,6 @@ public class MadnStart extends JFrame implements ActionListener {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder  = factory.newDocumentBuilder();
 			String text = Toolbox.readFile(xmlPackage.replace('.', File.separatorChar) + File.separator + xmlServer);
-			text = Toolbox.xorText(text, Toolbox.DECODE);
 			Document document = builder.parse(new InputSource(new StringReader(text)));
 			MadnStart.SERVER_SERVERNAME = document.getElementsByTagName("name").item(0).getFirstChild().getNodeValue();
 			MadnStart.SERVER_NICKNAME = document.getElementsByTagName("nickname").item(0).getFirstChild().getNodeValue();
@@ -210,7 +209,6 @@ public class MadnStart extends JFrame implements ActionListener {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder  = factory.newDocumentBuilder();
 			String text = Toolbox.readFile(xmlPackage.replace('.', File.separatorChar) + File.separator + xmlClient);
-			text = Toolbox.xorText(text, Toolbox.DECODE);
 			Document document = builder.parse(new InputSource(new StringReader(text)));
 			MadnStart.CLIENT_SERVERHOST = document.getElementsByTagName("serverhost").item(0).getFirstChild().getNodeValue();
 			MadnStart.CLIENT_SERVERNAME = document.getElementsByTagName("servername").item(0).getFirstChild().getNodeValue();
@@ -241,8 +239,7 @@ public class MadnStart extends JFrame implements ActionListener {
 			StringWriter os = new StringWriter();
 			StreamResult result = new StreamResult( os );
 			transformer.transform( source, result );
-			String str = Toolbox.xorText(os.toString(), Toolbox.CODE);
-			Toolbox.writeFile(xmlPackage.replace('.', File.separatorChar) + File.separator + xmlServer, str);
+			Toolbox.writeFile(xmlPackage.replace('.', File.separatorChar) + File.separator + xmlServer, os.toString());
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -272,8 +269,7 @@ public class MadnStart extends JFrame implements ActionListener {
 			StringWriter os = new StringWriter();
 			StreamResult result = new StreamResult( os );
 			transformer.transform( source, result );
-			String str = Toolbox.xorText(os.toString(), Toolbox.CODE);
-			Toolbox.writeFile(xmlPackage.replace('.', File.separatorChar) + File.separator + xmlClient, str);
+			Toolbox.writeFile(xmlPackage.replace('.', File.separatorChar) + File.separator + xmlClient, os.toString());
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -345,6 +341,7 @@ public class MadnStart extends JFrame implements ActionListener {
         labNicknameServer.setFont(new java.awt.Font("Dialog", 0, 11));
         labNicknameServer.setText("Nickname");
         labNicknameServer.setBounds(new Rectangle(10, 40, 90, 15));
+        tfServernameServer.setFont(new java.awt.Font("Dialog", 0, 11));
         tfServernameServer.setText(SERVER_SERVERNAME);
         tfServernameServer.setBounds(new Rectangle(100, 10, 150, 21));
         tfNicknameServer.setFont(new java.awt.Font("Dialog", 0, 11));
