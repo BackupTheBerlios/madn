@@ -143,6 +143,34 @@ public class Toolbox {
 	}
 
 	/**
+	 * Laden eines Start-Icons(16*16).
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene ImageIcon.
+	 */
+	static public ImageIcon loadStartIcon(Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images","start.gif", clazz);
+		  if (img != null)
+			  return  new ImageIcon(img);
+	  }catch (IOException e){};
+		return null;
+	}		
+	
+	/**
+	 * Laden eines Quit-Icons(16*16).
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene ImageIcon.
+	 */
+	static public ImageIcon loadQuitIcon(Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images","quit.gif", clazz);
+		  if (img != null)
+			  return  new ImageIcon(img);
+	  }catch (IOException e){};
+		return null;
+	}	
+	
+	/**
 	 * Laden eines Stop-Icons(16*16).
 	 * @param clazz = Class von einer Componente.
 	 * @return Das geladene ImageIcon.

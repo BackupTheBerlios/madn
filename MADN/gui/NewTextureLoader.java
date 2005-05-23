@@ -1,18 +1,10 @@
-/*
- * Created on 09.05.2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package gui;
 
 import java.awt.Component;
 import java.awt.Image;
 import java.net.URL;
 
-
 import com.sun.j3d.utils.image.TextureLoader;
-
 
 public class NewTextureLoader extends TextureLoader {
 

@@ -90,7 +90,7 @@ public class AboutDialog extends JDialog implements ActionListener {
         btClose.setText("Schlieﬂen");
         btClose.setActionCommand("dispose");
         btClose.addActionListener( this );
-        btClose.setIcon(Toolbox.loadExitIcon(getClass()));
+        btClose.setIcon(Toolbox.loadStopIcon(getClass()));
         
         this.getContentPane().setLayout(null);
         this.getContentPane().add(lbLogo, null);

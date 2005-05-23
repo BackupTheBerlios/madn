@@ -29,7 +29,7 @@ public class InfoDialog extends JDialog implements ActionListener {
 	  JTextArea taControls = new JTextArea();
 	  JScrollPane spControls = new JScrollPane();
 	  
-	  JButton btClose = new JButton(Toolbox.loadExitIcon(this.getClass()));
+	  JButton btClose = new JButton(Toolbox.loadStopIcon(this.getClass()));
 
 	  public InfoDialog(GameFrame parent) {
 	  	

@@ -302,7 +302,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     JMenu gameMenu = new JMenu("Spiel");
     gameMenu.setMnemonic('S');
 
-       mi = new JMenuItem("Neues Spiel", Toolbox.loadRefreshIcon(this.getClass()));
+       mi = new JMenuItem("Neues Spiel", Toolbox.loadStartIcon(this.getClass()));
        mi.addActionListener(this);
        mi.setActionCommand("newGame");
        mi.setEnabled(client instanceof Server);
@@ -311,7 +311,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
        gameMenu.addSeparator();
 
-       mi = new JMenuItem("Beenden", Toolbox.loadExitIcon(this.getClass()));
+       mi = new JMenuItem("Beenden", Toolbox.loadStopIcon(this.getClass()));
        mi.addActionListener(this);
        mi.setActionCommand("dispose");
        setCtrlAccelerator(mi, 'E');
@@ -459,7 +459,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			if (e.getSource() instanceof JMenuItem){
 				JMenuItem mi = (JMenuItem)e.getSource();
 				mi.setText("Spiel beenden");
-				mi.setIcon(Toolbox.loadStopIcon(this.getClass()));
+				mi.setIcon(Toolbox.loadQuitIcon(this.getClass()));
 			    mi.setActionCommand("quitGame");
 			    setCtrlAccelerator(mi, 'Q');
 			}
@@ -474,7 +474,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			if (e.getSource() instanceof JMenuItem){
 				JMenuItem mi = (JMenuItem)e.getSource();
 				mi.setText("Neues Spiel");
-				mi.setIcon(Toolbox.loadRefreshIcon(this.getClass()));
+				mi.setIcon(Toolbox.loadStartIcon(this.getClass()));
 			    mi.setActionCommand("newGame");
 			    setCtrlAccelerator(mi, 'N');
 			}
