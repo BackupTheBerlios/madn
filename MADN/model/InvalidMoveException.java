@@ -30,6 +30,10 @@ public class InvalidMoveException extends Exception {
 		
 	}
 
+	public static String getMessage(int errorCode){
+		if (messages == null) initializeErrorMessages();
+		return messages[errorCode];
+	}
 	public String getMessage(){
 		return messages[errorCode];
 	}
@@ -49,18 +53,18 @@ public class InvalidMoveException extends Exception {
 		messages[0] = "Unbekannter Fehlercode.";
 		messages[1] = "Spielstein nicht vorhanden.";
 		messages[2] = "Ungültige Zugdistanz.";
-		messages[3] = "Spielsteine aus dem Startfeld können nur bei Würfeln einer 6\nangesetzt werden!" +
+		messages[3] = "Spielsteine aus dem Startfeld können nur bei Würfeln einer 6 angesetzt werden!" +
 					  	"\nWählen Sie einen Spielstein außerhalb des Startfelds.";
 		messages[4] = "Zielfeld durch Spielstein gleicher Farbe besetzt." +
 		  				"\nWählen Sie einen anderen Spielstein.";
-		messages[5] = "Über's Ziel hinausgeschossen: Die gewürfelte Distanz kann\nnicht gerückt werden."+
+		messages[5] = "Über's Ziel hinausgeschossen: Die gewürfelte Distanz kann nicht gerückt werden."+
 		  				"\nWählen Sie einen anderen Spielstein.";
 		messages[6] = "Im Zielbereich darf kein (eigener) Spielstein\nübersprungen werden."+
 		  				"\nWählen Sie einen anderen Spielstein.";
-		messages[7] = "Befinden sich noch Spielsteine auf dem Startfeld, muss bei\nWürfeln einer 6 einer dieser Steine angesetzt werden."+
-		  				"\nWählen Sie einen Spielstein aus dem Startfeld.";
-		messages[8] = "Es befindet sich einer Ihrer Spielsteine auf Ihrem Ansatzfeld.\nMit diesem Würfelergebnis kann/muss das Ansatzfeld\ngeräumt werden."+
-		  				"\nWählen Sie den Spielstein des Ansatzfelds.";
+		messages[7] = "Befinden sich noch Spielsteine auf dem Startfeld, muss bei Würfeln einer 6 einer dieser\nSteine angesetzt werden. "+
+		  				"Wählen Sie einen Spielstein aus dem Startfeld.";
+		messages[8] = "Es befindet sich einer Ihrer Spielsteine auf Ihrem Ansatzfeld. Mit diesem Würfelergebnis\nkann/muss das Ansatzfeld geräumt werden. "+
+		  				"Wählen Sie den Spielstein des Ansatzfelds.";
 		messages[9] = "Kein Zug möglich!!!";
 
 	}

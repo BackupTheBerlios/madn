@@ -22,12 +22,14 @@ import model.Piece;
  */
 public class ServerImpl extends ClientImpl implements Server {
 	
+	// Konstanten
+	private static int NO_ACTIVE_CLIENT = -1;
 	// Logisches Modell des Spiels
 	private BoardModel bm;
 	// Client-Liste
 	private Client[] clients = {null, null, null, null};
 	// ID/Farbe des Farbe des als nächstes ziehenden Spielers
-	private int activeClient = -1; 
+	private int activeClient = NO_ACTIVE_CLIENT; 
 	// Liste der verfügbaren Spielerfarben
 	private ArrayList colors; 
 	// Wird aktuell gespielt?
@@ -63,6 +65,7 @@ public class ServerImpl extends ClientImpl implements Server {
 	}
 
 	public void newClient(Client newClient) throws RemoteException, Exception {
+		
 		int color = getNextAvailableColor();
 		
 		if (color != -1){
@@ -71,6 +74,7 @@ public class ServerImpl extends ClientImpl implements Server {
 				clients[color] = newClient;
 				sendRadioMessage(newClient.getNickname() + " [" + Toolbox.colorToString(color) + "] hat sich angemeldet.");
 			} else {
+				colors.add(0, new Integer(color));
 				throw new Exception("Spiel läuft bereits.");
 			}
 		} else {
@@ -111,7 +115,7 @@ public class ServerImpl extends ClientImpl implements Server {
 						// Message an alle Spieler
 						sendRadioMessage("Das Spiel kann nicht fortgesetzt werden!\nDer Server wurde beendet!");
 						// Alle Spieler inaktiv setzen
-						if (activeClient != -1)
+						if (activeClient != NO_ACTIVE_CLIENT)
 							clients[activeClient].setStatus(Constants.INACTIVE);
 						// Server aus Client-Liste löschen
 						clients[id] = null;
@@ -184,7 +188,7 @@ public class ServerImpl extends ClientImpl implements Server {
 						}else{
 							clients[activeClient].setStatus(Constants.INACTIVE);
 							int c = activeClient;
-							activeClient = -1;
+							activeClient = NO_ACTIVE_CLIENT;
 							refreshClients(true);
 							sendRadioMessage("Game Over!!! " + clients[c].getNickname() + " [" + Toolbox.colorToString(color) + "] ist der Gewinner.");
 							clients[c].recieveMessage("Game Over!!!\nHerzlichen Glückwunsch Sie haben gewonnen.");
@@ -202,7 +206,7 @@ public class ServerImpl extends ClientImpl implements Server {
 							}
 						}else{
 							//clients[activeClient].setStatus(Constants.ACTIVE_MOVE);
-							clients[activeClient].recieveMessage(e.getMessage());
+							clients[activeClient].recieveErrorMessage(e.getMessage());
 						}
 						
 						//throw (e);
@@ -242,7 +246,7 @@ public class ServerImpl extends ClientImpl implements Server {
 		try {
 			
 			int tmpActive = activeClient;
-			activeClient = -1;
+			activeClient = NO_ACTIVE_CLIENT;
 			
 			if (clients[tmpActive] != null){
 				clients[tmpActive].setStatus(Constants.INACTIVE);
@@ -297,7 +301,7 @@ public class ServerImpl extends ClientImpl implements Server {
 				// Würfelversuche dekrementieren
 				clients[client].decrementAttempts();
 				// Message: Würfelergebnis an alle Spieler
-				sendRadioMessage(clients[client].getNickname() + " [" + Toolbox.colorToString(clients[client].getColor()) + "] hat eine " + distance + " gewüfelt.");
+				sendRadioMessage(clients[client].getNickname() + " [" + Toolbox.colorToString(clients[client].getColor()) + "] hat eine " + distance + " gewüfelt.", false);
 				
 				// Auswertung Wurfergebnis
 				if (bm.existsMoveablePiece(clients[client].getColor(), distance)){
@@ -328,10 +332,15 @@ public class ServerImpl extends ClientImpl implements Server {
 	}
 	
 	public void sendRadioMessage(String msg) throws RemoteException {
+		sendRadioMessage(msg, true);
+	}
+	
+	public void sendRadioMessage(String msg, boolean inclActiveClient) throws RemoteException {
 		try {
 			if (clients != null){
 				for (int i = 0; i < clients.length; i++) {
-					if (clients[i] != null)	clients[i].recieveRadioMessage(msg);			
+					if ((inclActiveClient || (i!=activeClient)) &&(clients[i] != null))
+						clients[i].recieveRadioMessage(msg);			
 				}
 			}
 		} catch (RemoteException e) {
@@ -357,6 +366,24 @@ public class ServerImpl extends ClientImpl implements Server {
 		refreshClients(true);
 		sendRadioMessage(clients[activeClient].getNickname() + " [" + Toolbox.colorToString(clients[activeClient].getColor()) + "] am Zug.\nNeues Spiel gestartet.");
 	}
+	
+	/* (non-Javadoc)
+	 * @see gui.Server#startNewGame()
+	 */
+	public void quitGame() throws RemoteException {
+		bm = new BoardModel();
+		
+		if ((activeClient>=0) && (activeClient < clients.length))
+			clients[activeClient].setStatus(Constants.INACTIVE);
+		
+		activeClient = NO_ACTIVE_CLIENT;
+		busy = false;
+		
+		refreshClients(true);
+		sendRadioMessage("Das aktuelle Spiel wurde beendet.");
+	}
+	
+	
 
 	/* (non-Javadoc)
 	 * @see gui.Server#getPieces()

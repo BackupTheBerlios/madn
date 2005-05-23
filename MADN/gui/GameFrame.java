@@ -30,7 +30,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class GameFrame extends JFrame implements ActionListener, MouseListener, ClientListener, AppletContext, AppletStub, PawnPickingListener{
+public class GameFrame extends JFrame implements ActionListener, MouseListener, ClientListener, AppletContext, AppletStub, PawnPickingListener, AnimationListener{
   
   public static Color[] colors = {new Color(255,0,0), new Color(60,60,60), new Color(0,0,255), new Color(0, 153, 51)};	
  
@@ -48,6 +48,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   private JLabel lbPlayer = new JLabel();
   private JLabel lbStatus = new JLabel();
   private JLabel lbTip = new JLabel();
+  private JTextArea taTip = new JTextArea();
   
   private JPanel pnDice = new JPanel();
   private JButton btDice = new JButton(Toolbox.loadDiceIcon(this.getClass()));
@@ -68,6 +69,8 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   private JDesktopPane desktop = null;
   private Server server = null;
   
+  private boolean animationRunning = false;
+  
   public GameFrame(Client client) {
     
   	super("Mensch ärgere Dich nicht!");
@@ -81,7 +84,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		//e1.printStackTrace();
 	}
 	
-  	int xSize = 772, ySize = 643;
+  	int xSize = 772, ySize = 668;
 	
     Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	d.width = (d.width - xSize)/2;
@@ -156,7 +159,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
        dicePanel.setLayout(new BorderLayout());
           //tfDiceResult.setSize(150, 21);
        	  //diceApplet.add(tfDiceResult, BorderLayout.CENTER);
-       	  diceApplet = new DiceApplet();
+       	  diceApplet = new DiceApplet(this);
        	  diceApplet.setStub(this);
        	  diceApplet.init();
        	  diceApplet.start();
@@ -218,7 +221,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
     pnRadio.add(spRadio, null);
 
-    tbStatus.setBounds(new Rectangle(0,567, 772, 20));
+    tbStatus.setBounds(new Rectangle(0,567, 772, 45));
     tbStatus.setBorderPainted(true);
     tbStatus.setEnabled(false);
     
@@ -235,8 +238,13 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   
     tbStatus.addSeparator();
          
-    	lbTip.setFont(new java.awt.Font("Dialog", 1, 11));
-       	tbStatus.add(lbTip);	
+    	//lbTip.setFont(new java.awt.Font("Dialog", 1, 11));
+       	taTip.setFont(new java.awt.Font("Dialog", 1, 11));
+    	taTip.setEditable(false);
+       	taTip.setBackground(this.getBackground());
+       	tbStatus.add(lbTip);
+       	tbStatus.addSeparator();
+       	tbStatus.add(taTip);
     	
     this.getContentPane().add(boardPanel, null);
     this.getContentPane().add(pnPieces, null);
@@ -335,17 +343,35 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     return mb;
   }
 
-  private void showTip(String tip, int millis){
+  
+  private void showErrorInStatusBar(String errorMsg, int millis){
   	int delay = millis; //Millisekunden
     
-  	lbTip.setIcon(Toolbox.loadTipIcon(this.getClass()));
-  	lbTip.setText(tip);
+  	lbTip.setIcon(Toolbox.loadStop24Icon(this.getClass()));
+  	taTip.setText(errorMsg);
   	
   	ActionListener taskPerformer = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             ((Timer)e.getSource()).stop();
           	lbTip.setIcon(null);
-          	lbTip.setText("");            
+          	taTip.setText("");            
+        }
+    };
+    
+    new Timer(delay, taskPerformer).start();
+  }
+  
+  private void showTipInStatusBar(String tip, int millis){
+  	int delay = millis; //Millisekunden
+    
+  	lbTip.setIcon(Toolbox.loadTip24Icon(this.getClass()));
+  	taTip.setText(tip);
+  	
+  	ActionListener taskPerformer = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            ((Timer)e.getSource()).stop();
+          	lbTip.setIcon(null);
+          	taTip.setText("");            
         }
     };
     
@@ -359,8 +385,8 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
   private void updateComponentEnabling(){
   	try {
-  		btMove.setEnabled(client.getStatus() == Constants.ACTIVE_MOVE);
-		btDice.setEnabled(client.getStatus() == Constants.ACTIVE_DICE);
+  		btMove.setEnabled(!animationRunning && (client.getStatus() == Constants.ACTIVE_MOVE));
+		btDice.setEnabled(!animationRunning && (client.getStatus() == Constants.ACTIVE_DICE));
 	} catch (RemoteException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
@@ -395,7 +421,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 				client.getServer().move(client.getColor(), selectedPiece, dice);
 				//tfDiceResult.setText("");
 			}else{
-				showTip("Noch nicht gewürfelt?!", 5000);
+				showTipInStatusBar("Noch nicht gewürfelt?!", 5000);
 			}
 		} catch (InvalidMoveException e1) {
 				if (e1.getErrorCode() == Constants.NO_MOVEABLE_PIECE){
@@ -406,7 +432,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 			e2.printStackTrace();
 		}
 	}else{
-		showTip("Spielstein ausgewählt?!", 5000);
+		showTipInStatusBar("Spielstein ausgewählt?!", 5000);
 	}  	
   }
   
@@ -414,6 +440,8 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
    	try {
    		
 		client.throwTheDice();
+		diceApplet.startAnimation(client.getDiceResult());
+		
 		//tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
 		
 	} catch (RemoteException e1) {
@@ -428,6 +456,29 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     if (cmd.equals("newGame")){
     	try {
 			client.getServer().startNewGame();
+			if (e.getSource() instanceof JMenuItem){
+				JMenuItem mi = (JMenuItem)e.getSource();
+				mi.setText("Spiel beenden");
+				mi.setIcon(Toolbox.loadStopIcon(this.getClass()));
+			    mi.setActionCommand("quitGame");
+			    setCtrlAccelerator(mi, 'Q');
+			}
+		} catch (RemoteException e1) {
+			
+			e1.printStackTrace();
+		}
+    }else if (cmd.equals("quitGame")){
+    	try {
+			client.getServer().quitGame();
+			
+			if (e.getSource() instanceof JMenuItem){
+				JMenuItem mi = (JMenuItem)e.getSource();
+				mi.setText("Neues Spiel");
+				mi.setIcon(Toolbox.loadRefreshIcon(this.getClass()));
+			    mi.setActionCommand("newGame");
+			    setCtrlAccelerator(mi, 'N');
+			}
+			
 		} catch (RemoteException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -585,8 +636,12 @@ public void addRadioMessage(String msg) {
 	taRadio.setCaretPosition(0);
 }
 
+public void showErrorMessage(String msg) {
+	showErrorInStatusBar(msg, 6000);
+}
+
 public void showMessage(String msg) {
-	MessageDialogs.showInfoMessageDialog(this, "Server-Message", msg);
+	showTipInStatusBar(msg, 6000);
 }
 /* (non-Javadoc)
  * @see gui.PawnPickingListener#pawnClicked(int, int, int)
@@ -613,5 +668,23 @@ public void rightMouseButtonClicked() {
 	if (btDice.isEnabled()){
 		dice();
 	}
+}
+/* (non-Javadoc)
+ * @see gui.AnimationListener#animationStarted()
+ */
+public void animationStarted() {
+	
+	animationRunning = true;
+	updateComponentEnabling();
+	
+}
+/* (non-Javadoc)
+ * @see gui.AnimationListener#animationFinished()
+ */
+public void animationFinished() {
+	
+	animationRunning = false;
+	updateComponentEnabling();
+	
 }
 }

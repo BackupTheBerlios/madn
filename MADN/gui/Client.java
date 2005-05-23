@@ -23,6 +23,7 @@ public interface Client extends Remote {
 	public void setServer(Server server) throws RemoteException;
 	public Server getServer() throws RemoteException;
 	public void recieveRadioMessage (String msg) throws RemoteException;
+	public void recieveErrorMessage (String msg) throws RemoteException;
 	public void recieveMessage (String msg) throws RemoteException;
 	public void setStatus (int status) throws RemoteException;
 	public int getStatus () throws RemoteException;
@@ -36,4 +37,5 @@ public interface Client extends Remote {
 	public int getDiceResult () throws RemoteException;
 	public void setDiceResult (int dice) throws RemoteException;
 	public boolean existsServer() throws RemoteException;
+	//public void movePawn(int id, int distance) throws RemoteException, InvalidMoveException;
 }

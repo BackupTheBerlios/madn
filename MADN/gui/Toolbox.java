@@ -143,6 +143,21 @@ public class Toolbox {
 	}
 
 	/**
+	 * Laden eines Stop-Icons(16*16).
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene ImageIcon.
+	 */
+	static public ImageIcon loadStopIcon(Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images","stop.gif", clazz);
+		  if (img != null)
+			  return  new ImageIcon(img);
+	  }catch (IOException e){};
+		return null;
+	}
+	
+	
+	/**
 	 * Laden eines Stop-Icons(24*24).
 	 * @param clazz = Class von einer Componente.
 	 * @return Das geladene ImageIcon.

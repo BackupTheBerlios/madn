@@ -30,9 +30,13 @@ public interface Server extends Remote {
 	
 	public void dice(int client) throws RemoteException;
 	
+	public void sendRadioMessage(String msg, boolean inclActiveClient) throws RemoteException;
+	
 	public void sendRadioMessage(String msg) throws RemoteException;
 	
 	public void startNewGame() throws RemoteException;
+	
+	public void quitGame() throws RemoteException;
 	
 	public Piece[][] getPieces() throws RemoteException;
 

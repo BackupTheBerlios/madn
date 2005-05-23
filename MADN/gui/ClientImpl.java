@@ -140,4 +140,17 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 	public boolean existsServer() throws RemoteException{
 		return (server != null);
 	}
+	
+//	public void movePawn(int id, int distance) throws RemoteException, InvalidMoveException{
+//		//this.
+//		server.move(this.color, id, distance);
+//	}
+
+	/* (non-Javadoc)
+	 * @see gui.Client#recieveErrorMessage(int)
+	 */
+	public void recieveErrorMessage(String msg) throws RemoteException {
+		listener.showErrorMessage(msg);
+		
+	}
 }
