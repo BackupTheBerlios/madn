@@ -49,6 +49,8 @@ public class ServerImpl extends ClientImpl implements Server {
                 rmiProcess = Runtime.getRuntime().exec(rmiFile.getAbsolutePath() + " -J-classpath -J\"" + libDir.getAbsolutePath() + "\"");
 				Naming.rebind(servername, this);
             } catch(IOException exc) {
+                if(rmiProcess != null)
+                    rmiProcess.destroy();
                 throw new Exception("RMI-Registry konnte nicht gestartet werden.");
             } catch(RuntimeException re) {
                 rmiProcess.destroy();
