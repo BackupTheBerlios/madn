@@ -75,7 +75,7 @@ public class MadnStart extends JFrame implements ActionListener {
 	 * Klasse MadnStart.
 	 */
     public MadnStart() {
-        super("Mensch ‰rgere Dich nicht !");
+        super("Mensch ‰rgere Dich nicht!");
         try {
 			restoreFiles();
             loadClientSettings();
@@ -329,13 +329,13 @@ public class MadnStart extends JFrame implements ActionListener {
      * @throws Exception
      */
     void jbInitSelectPanel() throws Exception {
-        butNewGame.setText("Neues Spiel Starten");
+        butNewGame.setText("Spieleserver starten");
         butNewGame.setBounds(new Rectangle(10, 10, 250, 25));
         butNewGame.setFont(new java.awt.Font("SansSerif", 1, 11));
-        butJoinGame.setText("Einem Spiel Anschlieﬂen");
+        butJoinGame.setText("Spieleserver anschlieﬂen");
         butJoinGame.setBounds(new Rectangle(10, 50, 250, 25));
         butJoinGame.setFont(new java.awt.Font("SansSerif", 1, 11));
-        butBeenden.setText("Anwendung Beenden");
+        butBeenden.setText("Beenden");
         butBeenden.setBounds(new Rectangle(10, 100, 250, 25));
         butBeenden.setFont(new java.awt.Font("SansSerif", 1, 11));
         selectPanel.setLayout(null);
@@ -346,11 +346,11 @@ public class MadnStart extends JFrame implements ActionListener {
         selectPanel.setBounds(5, 5, 250, 130);
         
         butBeenden.addActionListener(this);
-        butBeenden.setIcon(Toolbox.loadCloseIcon(getClass()));
+        butBeenden.setIcon(Toolbox.loadStopIcon(getClass()));
         butNewGame.addActionListener(this);
-        butNewGame.setIcon(Toolbox.loadNewIcon(getClass()));
+        butNewGame.setIcon(Toolbox.loadStartIcon(getClass()));
         butJoinGame.addActionListener(this);
-        butJoinGame.setIcon(Toolbox.loadAddIcon(getClass()));
+        butJoinGame.setIcon(Toolbox.loadConnectorIcon(getClass()));
     }
     
     /**
@@ -388,7 +388,7 @@ public class MadnStart extends JFrame implements ActionListener {
         butZurueckServer.addActionListener(this);
         butZurueckServer.setIcon(Toolbox.loadZurueckIcon(getClass()));
         butStarten.addActionListener(this);
-        butStarten.setIcon(Toolbox.loadConnectorIcon(getClass()));
+        butStarten.setIcon(Toolbox.loadStartIcon(getClass()));
     }
     
     /**

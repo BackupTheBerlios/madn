@@ -383,6 +383,22 @@ public class Toolbox {
 	}
 	
 	/**
+	 * Laden eines beliebigen Images.
+	 * @param clazz = Class von einer Componente.
+	 * @return Das geladene Image.
+	 */
+	static public Image loadImage(String fname, Class clazz){
+		try{
+		  Image img = Toolbox.loadImageResource("gui.images",fname, clazz);
+		  return img;
+	  }catch (IOException e){
+	  	e.printStackTrace();
+	  };
+	  	
+		return null;
+	}
+	
+	/**
 	 * Den InputStream einer Datei ermitteln. 
 	 * @param pkgname = Der Name vom Package, in dme sich eine Datei befindet. 
 	 * @param fname = Der Name der Datei.

@@ -1,16 +1,14 @@
-/*
- * Created on 17.05.2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package gui;
-
 
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+/**
+ * Klasse: AboutDialog
+ * ===================
+ * Dialog zur Anzeige der wesentlichen Veranstaltungs- und Gruppen- bzw. Entwicklerinformationen  
+ */
 public class AboutDialog extends JDialog implements ActionListener {
     
     JLabel lbLogo = null;
@@ -24,7 +22,12 @@ public class AboutDialog extends JDialog implements ActionListener {
     JLabel lbFH = new JLabel();
     JLabel lbGroup = new JLabel();
     JButton btClose = new JButton();
-    
+   
+   /**
+    * Konstruktor: AboutDialog
+    * ------------------------
+    * @param parent = der übergeordnete GameFrame
+    */ 
    public AboutDialog (GameFrame parent) {
 		super(parent, "Über...", false );
 	  	int xSize = 321, ySize=288;
@@ -43,6 +46,8 @@ public class AboutDialog extends JDialog implements ActionListener {
     }
     
     /**
+     * Methode: jbInit
+     * ---------------
      * Initialisierung der graphischen Oberfläche. 
      * @throws Exception
      */
@@ -107,6 +112,8 @@ public class AboutDialog extends JDialog implements ActionListener {
     }
 
     /**
+     * Methode: actionPerformed
+     * ------------------------ 
      * Reaktion auf den Beenden-Button.
      */
     public void actionPerformed(ActionEvent e) {

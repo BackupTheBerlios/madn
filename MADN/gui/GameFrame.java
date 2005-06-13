@@ -157,8 +157,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
        dicePanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
        dicePanel.setBounds(new Rectangle(45, 20, 145, 145));
        dicePanel.setLayout(new BorderLayout());
-          //tfDiceResult.setSize(150, 21);
-       	  //diceApplet.add(tfDiceResult, BorderLayout.CENTER);
+
        	  diceApplet = new DiceApplet(this);
        	  diceApplet.setStub(this);
        	  diceApplet.init();
@@ -277,15 +276,6 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		s.newClient(c);
 		f2 = new GameFrame(c);
 		c.setClientListener(f2);
-//		
-//		try {
-//			Thread.sleep(2000);
-//		} catch (InterruptedException e1){}
-//		
-//		c = s.newClient("Waldemar");
-//		f3 = new GameFrame(c);
-//		c.setClientListener(f3);
-		
 		
 	} catch (RemoteException e) {
 		e.printStackTrace();
@@ -296,6 +286,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   }
 
   private JMenuBar createMenuBar(){
+  	
     JMenuBar mb = new JMenuBar();
     JMenuItem mi = null;
 
@@ -317,9 +308,6 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
        setCtrlAccelerator(mi, 'E');
        gameMenu.add(mi);
 
-//    JMenu settingsMenu = new JMenu("Optionen");
-//    settingsMenu.setMnemonic('O');
-
     JMenu helpMenu = new JMenu("?");
 
       mi = new JMenuItem("Spielregeln/Steuerung", Toolbox.loadRulesIcon(this.getClass()));
@@ -338,7 +326,6 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 
     mb.add(gameMenu);
     mb.add(helpMenu);
-
 
     return mb;
   }
@@ -442,11 +429,8 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
 		client.throwTheDice();
 		diceApplet.startAnimation(client.getDiceResult());
 		
-		//tfDiceResult.setText("Würfelergebnis: " + client.getDiceResult());
-		
 	} catch (RemoteException e1) {
-		// e1.printStackTrace();
-		//tfDiceResult.setText("Würfelergebnis: n.a.");
+		e1.printStackTrace();
 	}  	
   }
   
@@ -624,14 +608,14 @@ public void boardConstellationChanged(Piece[][] pieces) {
 	boardApplet.actualizePawnPositions(pieces);
 }
 
-public void enablingChanged() {
+public void statusChanged() {
 	
 	updateComponentEnabling();
 	updateStatusBar();
 	
 }
 
-public void addRadioMessage(String msg) {
+public void showRadioMessage(String msg) {
 	taRadio.setText(msg + "\n" + taRadio.getText()) ;
 	taRadio.setCaretPosition(0);
 }

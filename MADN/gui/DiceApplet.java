@@ -30,11 +30,14 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
 import com.sun.j3d.utils.universe.ViewingPlatform;
 
 /**
- * @author Mario
+ * Klasse: DiceApplet
+ * ==================
+ * Spezialiserung der Klasse Applet, zur Anzeige einer Java3D-basierten
+ * dreidimensionalen graphischen Umsetzung der Würfelanimation  
  */
 public class DiceApplet extends Applet {
 
-	// Scene Graph
+	// Objekte des Szenengraphen
 	private SimpleUniverse 						 universe = null;
 	private BranchGroup							 scene = null; // ROOT
 		private TransformGroup 					 sceneTransformGroup = null;
@@ -59,7 +62,7 @@ public class DiceApplet extends Applet {
 	Color3f 			sphereColor = new Color3f(0.1f, 1f, 0.9f);
 	Color3f				tableColor = new Color3f(new Color(153,102,0));
 	
-	// Dimensions
+	// Abmessungen (Tisch & Würfel)
     private float tableSemiHeight = 0.05f;
     private float tableSemiWidth  = 1.00f;
     private float tableSemiDepth  = 0.50f;
@@ -77,14 +80,13 @@ public class DiceApplet extends Applet {
 							{0.0f, 				 (float)(Math.PI*1.5d)}	// Würfelergebnis = 6
 						  };
 	
-	// Key Frames & Interpolator
+	// Interpolator und Knoten-Frames
     private int                              	 duration = 2750;
     private float								 threshold = 0.96f;
     private Alpha                                animAlpha;
     private Transform3D                          yAxis;
     private KBKeyFrame[]                         splineKeyFrames = new KBKeyFrame[12];
-    //private KBRotPosScaleSplinePathInterpolator  splineInterpolator;
-    private AnimationInterpolator  				splineInterpolator;
+    private AnimationInterpolator  				 splineInterpolator;
     
     //Knoten-Positionen
     Vector3f           pos0 =  new Vector3f(-0.75f, tableSemiHeight + 3.00f * diceSemiDiagonal,         0.0f);
@@ -100,6 +102,10 @@ public class DiceApplet extends Applet {
     Vector3f           pos10 = new Vector3f( 0.75f, tableSemiHeight + diceSemiTexLength + diceEdgeGap,  0.0f);
     Vector3f           pos11 = new Vector3f( 0.75f, tableSemiHeight + diceSemiTexLength + diceEdgeGap,  0.0f);
 
+	/**
+	 * Konstruktor: DiceApplet
+	 * -----------------------
+	 */
 	public DiceApplet(AnimationListener listener){
 		
 		setLayout(new BorderLayout());
@@ -122,7 +128,7 @@ public class DiceApplet extends Applet {
 		ViewingPlatform viewingPlatform = universe.getViewingPlatform();
 		viewingPlatform.setNominalViewingTransform();
 
-		// add orbit behavior to the ViewingPlatform
+		// OrbitBehavior hinzufügen
 //		OrbitBehavior orbit = new OrbitBehavior(c3d, OrbitBehavior.REVERSE_ALL);
 //		orbit.setSchedulingBounds(bounds);
 //		viewingPlatform.setViewPlatformBehavior(orbit);		
@@ -130,21 +136,39 @@ public class DiceApplet extends Applet {
 		universe.addBranchGraph(scene);
 	}
 
+	/**
+	 * Methode: createInterpolator
+	 * ---------------------------
+	 * Erstellt Animationsinterpolator und fügt ihn der entsprechenden Behavior-
+	 * Branchgroup bei.
+	 * @param listener = bei Statusänderungen der Animation zu benachrichtigender Listener
+	 */
 	private void createInterpolator (AnimationListener listener) {
-
-      objBehaviorBranch = new BranchGroup();
+      
+      // Erstelle Interpolator
       splineInterpolator = new AnimationInterpolator(listener, duration, objTransformGroup, new Transform3D(), threshold, splineKeyFrames); 
+      
+      // Lege Wirkungsgrenzen fest 
       splineInterpolator.setSchedulingBounds(bounds);
       
+      // Weise Interpolator zu
+      objBehaviorBranch = new BranchGroup();
       objBehaviorBranch.addChild(splineInterpolator);
       objTransformGroup.addChild(objBehaviorBranch); 
      
     }
 	
+	/**
+	 * Methode: startAnimation
+	 * -----------------------
+	 * Startet die Würfelanimation mit einem festzulegenden Würfelergebnis.
+	 * @param diceResult = gewünschtes Würfelergebnis
+	 */
 	public void startAnimation(int diceResult){
 		
 		if ((diceResult>=1)&&(diceResult<=6)){
 		
+			// Aktualisiere die Knoten-/Schlüsselframes entsprechend des Würfelergebnisses
 			float pitch = rotations[diceResult-1][0];
 			float initialBank = rotations[diceResult-1][1];
 			
@@ -166,119 +190,122 @@ public class DiceApplet extends Applet {
 			splineKeyFrames[11].pitch = splineKeyFrames[0].pitch;
 			splineKeyFrames[11].bank = splineKeyFrames[10].bank;
 			
-					
+			// Weise aktualisierte Knotenframes Interpolator zu		
 			splineInterpolator.setKeyFrames(splineKeyFrames);
+			// Starte Animation
 			splineInterpolator.startAnimation();
 		}
 		
 	}
     
-    
+    /**
+     * Methode: setupSplineKeyFrames
+     * -----------------------------
+     * Initialisiert die Knotenframes, insbesondere ihre Positionen innerhalb des Universums.
+     */
     private void setupSplineKeyFrames () {
-           
-      // Prepare spline keyframe data
-      Point3f p   = new Point3f (pos0);     // position
-      float head  = 0.0f ;                  // heading
-      float pitch = 0.0f ;                 	// pitch 
-      float bank  = 0.0f;					// bank 
-      Point3f s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[0] = 
-         new KBKeyFrame(0.0f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
-
-      p = new Point3f (pos1);
-      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;	// heading
-      pitch = 0.0f ;                    								// pitch 
-      bank  = 0.0f;              										// bank  
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[1] = 
-         new KBKeyFrame(0.1f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
-
-      p = new Point3f (pos2);
-      head  = 0.0f ;                               // heading
-      pitch = 0.0f ;                                  // pitch 
-      bank  = 0.0f;                               // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[2] = 
-         new KBKeyFrame(0.2f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
-
-      p = new Point3f (pos3);
-      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;                               // heading
-      pitch = 0.0f ;                                   // pitch 
-      bank  = 0.0f;              				  // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[3] = 
-         new KBKeyFrame(0.3f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
-
-      p = new Point3f (pos4);
-      head  = 0.0f ;                               // heading
-      pitch = 0.0f ;                               // pitch 
-      bank  = 0.0f;              				  // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[4] = 
-         new KBKeyFrame(0.4f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
-
-      p = new Point3f (pos5);
-      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;                               // heading
-      pitch = 0.0f ;                                   // pitch 
-      bank  = 0.0f;                               // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[5] = 
-         new KBKeyFrame(0.5f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
       
-      p = new Point3f (pos6);
-      head  = 0.0f ;                               // heading
-      pitch = 0.0f ;                                   // pitch 
-      bank = 0.0f;                               // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[6] = 
-         new KBKeyFrame(0.6f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
+        // Position des Knotenframes
+    	Point3f p   = new Point3f (pos0);
+    	// Rotation des Animationsobjekts um X-Achse
+    	float head  = 0.0f ;                  
+    	// Rotation des Animationsobjekts um Y-Achse
+    	float pitch = 0.0f ;                 	 
+    	// Rotation des Animationsobjekts um Z-Achse
+    	float bank  = 0.0f;					 
+    	// Skalierung des Animationsobjekts
+    	Point3f s = new Point3f(1.0f, 1.0f, 1.0f);         
+    	splineKeyFrames[0] = new KBKeyFrame(0.0f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
 
-      p = new Point3f (pos7);
-      head = 0.0f ;// = (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;                               // heading
-      pitch = 0.0f ;                                   // pitch 
-      bank  = 0.0f;                               // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[7] = 
-         new KBKeyFrame(0.7f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
+	      p = new Point3f (pos1);
+	      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;	
+	      pitch = 0.0f ;                    								
+	      bank  = 0.0f;              										
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[1] = new KBKeyFrame(0.1f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
+
+	      p = new Point3f (pos2);
+	      head  = 0.0f ;
+	      pitch = 0.0f ;
+	      bank  = 0.0f;  
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[2] = new KBKeyFrame(0.2f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
+
+	      p = new Point3f (pos3);
+	      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;     
+	      pitch = 0.0f ;
+	      bank  = 0.0f; 
+	      s = new Point3f(1.0f, 1.0f, 1.0f);          
+	      splineKeyFrames[3] = new KBKeyFrame(0.3f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
+
+	      p = new Point3f (pos4);
+	      head  = 0.0f ;
+	      pitch = 0.0f ;
+	      bank  = 0.0f;  
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[4] = new KBKeyFrame(0.4f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f); 
+
+	      p = new Point3f (pos5);
+	      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;     
+	      pitch = 0.0f ;
+	      bank  = 0.0f; 
+	      s = new Point3f(1.0f, 1.0f, 1.0f);          
+	      splineKeyFrames[5] = new KBKeyFrame(0.5f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
+      
+	      p = new Point3f (pos6);
+	      head  = 0.0f ;
+	      pitch = 0.0f ;
+	      bank  = 0.0f;  
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[6] = new KBKeyFrame(0.6f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
+
+	      p = new Point3f (pos7);
+	      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;     
+	      pitch = 0.0f ;
+	      bank  = 0.0f; 
+	      s = new Point3f(1.0f, 1.0f, 1.0f);          
+	      splineKeyFrames[7] = new KBKeyFrame(0.7f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
     
-      p = new Point3f (pos8);
-      head  = 0.0f ;                               // heading
-      pitch = 0.0f ;                                   // pitch 
-      bank  = 0.0f;                               // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[8] = 
-         new KBKeyFrame(0.8f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);      
+	      p = new Point3f (pos8);
+	      head  = 0.0f ;
+	      pitch = 0.0f ;
+	      bank  = 0.0f;  
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[8] = new KBKeyFrame(0.8f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);      
   
-      p = new Point3f (pos9);
-      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;                               // heading
-      pitch = 0.0f ;                                   // pitch 
-      bank  = 0.0f;                               // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);          // uniform scale
-      splineKeyFrames[9] = 
-         new KBKeyFrame(0.9f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
+	      p = new Point3f (pos9);
+	      head  = 0.0f ;//= (float)Math.PI/8 * 2*(randomizer.nextFloat() - 0.5f) ;     
+	      pitch = 0.0f ;
+	      bank  = 0.0f; 
+	      s = new Point3f(1.0f, 1.0f, 1.0f);          
+	      splineKeyFrames[9] = new KBKeyFrame(0.9f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);
   
-      p = new Point3f (pos10);
-      head  = 0.0f;                         // heading
-      pitch = 0.0f ;                    	// pitch 
-      bank  = 0.0f;                         // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);    // uniform scale
-      splineKeyFrames[10] = 
-         new KBKeyFrame(threshold, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);    
+	      p = new Point3f (pos10);
+	      head  = 0.0f ;
+	      pitch = 0.0f ;
+	      bank  = 0.0f;  
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[10] = new KBKeyFrame(threshold, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);    
     
-      p = new Point3f (pos11);
-      head  = 0.0f;                         // heading
-      pitch = 0.0f;                        // pitch 
-      bank  = 0.0f;                         // bank 
-      s = new Point3f(1.0f, 1.0f, 1.0f);    // uniform scale
-      splineKeyFrames[11] = 
-         new KBKeyFrame(1.0f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);    
+	      p = new Point3f (pos11);
+	      head  = 0.0f ;
+	      pitch = 0.0f ;
+	      bank  = 0.0f;  
+	      s = new Point3f(1.0f, 1.0f, 1.0f);
+	      splineKeyFrames[11] = new KBKeyFrame(1.0f, 0, p, head, pitch, bank, s, 0.0f, 0.0f, 0.0f);    
       
       
     }	
 	
-	
+	/**
+	 * Methode: buildSceneGraph
+	 * ------------------------
+	 * Erstellt den kompletten Szenengraphen (Lichter, Tisch, Würfel, ...).
+	 * @param listener = bei Statusänderungen der Animation zu benachrichtigender Listener
+	 */	
 	public void buildSceneGraph(AnimationListener listener){
-		
+
+		// Erstelle Transformationsgruppe der Szene
 		sceneTransform = new Transform3D();
 		Transform3D rotZ = new Transform3D();
 		Transform3D rotX = new Transform3D();
@@ -293,7 +320,9 @@ public class DiceApplet extends Applet {
 		sceneTransform.setTranslation(new Vector3f(-0.1f,0.15f,0.9f));
 		
 		sceneTransformGroup = new TransformGroup(sceneTransform);
-	    sceneTransformGroup.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+	    
+		// Setze Fähigkeiten
+		sceneTransformGroup.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 	    sceneTransformGroup.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);		
 		
 		// Hintergund setzen
@@ -327,12 +356,20 @@ public class DiceApplet extends Applet {
 		// Animationsinterpolator erstellen
 		createInterpolator(listener);
 	}
-	
+
+	/**
+	 * Methode: createDice
+	 * --------------------
+	 * Erstellt den Würfel.
+	 */
 	public void createDice(){
+		
+		// Transformationsgruppe für Würfelelemente erstellen
 		objTransform = new Transform3D();
 		objTransform.setTranslation(new Vector3f(-0.75f, tableSemiHeight + diceSemiTexLength + diceEdgeGap,  0.0f));
 		objTransformGroup = new TransformGroup(objTransform);
 		
+		// Fähigkeiten setzen
 		objTransformGroup.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 		objTransformGroup.setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
 		objTransformGroup.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
@@ -351,21 +388,21 @@ public class DiceApplet extends Applet {
 		// Alle Grundelemente erstellen
 		
 		// Unterseite
-		TexturedRectangularSide lowerSide = new TexturedRectangularSide(baseColor, "gui/images/d_lower.gif", TexturedRectangularSide.ZX_PLANE, x, -y, z, gap);
+		TexturedRectangularSide lowerSide = new TexturedRectangularSide(baseColor, "d_lower.gif", TexturedRectangularSide.ZX_PLANE, x, -y, z, gap);
 				
 		// Oberseite
-		TexturedRectangularSide upperSide = new TexturedRectangularSide(baseColor, "gui/images/d_upper.jpg", TexturedRectangularSide.ZX_PLANE, x, y, z, gap);
+		TexturedRectangularSide upperSide = new TexturedRectangularSide(baseColor, "d_upper.jpg", TexturedRectangularSide.ZX_PLANE, x, y, z, gap);
 		// Seite links
-		TexturedRectangularSide leftSide = new TexturedRectangularSide(baseColor, "gui/images/d_left.gif", TexturedRectangularSide.YZ_PLANE, -x, y, z, gap);
+		TexturedRectangularSide leftSide = new TexturedRectangularSide(baseColor, "d_left.gif", TexturedRectangularSide.YZ_PLANE, -x, y, z, gap);
 				
 		// Seite rechts
-		TexturedRectangularSide rightSide = new TexturedRectangularSide(baseColor, "gui/images/d_right.gif", TexturedRectangularSide.YZ_PLANE, x, y, z, gap);
+		TexturedRectangularSide rightSide = new TexturedRectangularSide(baseColor, "d_right.gif", TexturedRectangularSide.YZ_PLANE, x, y, z, gap);
 				
 		// Seite hinten
-		TexturedRectangularSide backSide = new TexturedRectangularSide(baseColor, "gui/images/d_back.gif", TexturedRectangularSide.XY_PLANE, x, y, -z, gap);
+		TexturedRectangularSide backSide = new TexturedRectangularSide(baseColor, "d_back.gif", TexturedRectangularSide.XY_PLANE, x, y, -z, gap);
 				
 		// Seite vorne
-		TexturedRectangularSide frontSide = new TexturedRectangularSide(baseColor, "gui/images/d_front.gif", TexturedRectangularSide.XY_PLANE, x, y, z, gap);
+		TexturedRectangularSide frontSide = new TexturedRectangularSide(baseColor, "d_front.gif", TexturedRectangularSide.XY_PLANE, x, y, z, gap);
 		
 		// Verbindungsfläche Unterseite - Rand links
 		ColoredRectangularSide lowerLeftSide = new ColoredRectangularSide(baseColor, lowerSide.getCoordinate(2),lowerSide.getCoordinate(1), leftSide.getCoordinate(3),leftSide.getCoordinate(2) );
@@ -461,11 +498,18 @@ public class DiceApplet extends Applet {
 		// Objekt dem Szenengraphen hinzufügen
 		sceneTransformGroup.addChild(objTransformGroup);
 	}
-	
+
+	/**
+	 * Methode: createTable
+	 * --------------------
+	 * Erstellt die Tischplatte.
+	 */
 	private void createTable(){
+		// Transformationsgruppe für Tischelemente erstellen
 		tableTransform = new Transform3D();
 		tableTransformGroup = new TransformGroup(tableTransform);
 		
+		// Fertigkeiten/Fähigkeiten setzen
 		tableTransformGroup.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		tableTransformGroup.setCapability(TransformGroup.ALLOW_TRANSFORM_READ); 
 		
@@ -558,7 +602,6 @@ public class DiceApplet extends Applet {
 		ColoredTriangularSide corner8 = new ColoredTriangularSide(baseColor,leftSide.getCoordinate(2),backSide.getCoordinate(2), lowerSide.getCoordinate(2) );
 
 		// Grundelemente an TransformGroup anhängen
-
 		tableTransformGroup.addChild(lowerSide);
 		tableTransformGroup.addChild(upperSide);
 		tableTransformGroup.addChild(leftSide);
@@ -593,7 +636,12 @@ public class DiceApplet extends Applet {
 		sceneTransformGroup.addChild(tableTransformGroup);
 	}
 	
-	
+	/**
+	 * MAIN-Methode
+	 * ------------
+	 * Test der Würfelanimation
+	 * @param args = keine
+	 */
 	public static void main(String[] args) {
 		DiceApplet da  = new DiceApplet(null);
 		new MainFrame(da, 512, 512);

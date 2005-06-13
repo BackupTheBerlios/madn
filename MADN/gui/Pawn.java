@@ -1,7 +1,3 @@
-/*
- * Created on 11.05.2005
- *
- */
 package gui;
 
 import javax.media.j3d.Appearance;
@@ -47,13 +43,7 @@ public class Pawn extends TransformGroup {
 		this.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		
 		Color3f col3f = new Color3f(GameFrame.colors[color]);
-//		float shading = 0.3f;
-//		ColoringAttributes ca = new ColoringAttributes(col3f, ColoringAttributes.SHADE_GOURAUD);
-//		Material m = new Material(col3f, new Color3f(col3f.x * shading, col3f.y * shading, col3f.z * shading), col3f, col3f, 50f);
-//		
-//		Appearance ap = new Appearance();
-//		ap.setColoringAttributes(ca);
-//		ap.setMaterial(m);
+
 		float shading = 0.1f;
 		Color3f white = new Color3f(1,1,1);
 		Color3f black = new Color3f(0,0,0);
@@ -121,8 +111,4 @@ public class Pawn extends TransformGroup {
 	public int getID(){
 		return id;
 	}
-
-//	public boolean containsShape3D (Shape3D shape){
-//		return cone.getShape(Cone.BODY).equals(shape) || cone.getShape(Cone.CAP).equals(shape) || sphere.getShape().equals(shape);	
-//	}
 }

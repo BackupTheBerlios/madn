@@ -1,21 +1,27 @@
-/*
- * Created on 22.05.2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package gui;
 
 import java.util.EventListener;
 
 /**
- * @author Mario
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * Interface: AnimationListener
+ * ============================
+ * Von Klassen, die von Statusänderungen einer Instanz der Klasse AnimationInterpolator
+ * benachrichtigt werden wollen, zu implementierendes Interface 
  */
 public interface AnimationListener extends EventListener {
+	
+	/**
+	 * Methode: animationStarted
+	 * -------------------------
+	 * Benachrichtigung über Animationsstart
+	 */
 	public void animationStarted();
+
+	/**
+	 * Methode: animationFinished
+	 * --------------------------
+	 * Benachrichtigung über Animationsende
+	 */
 	public void animationFinished();
 	
 }
