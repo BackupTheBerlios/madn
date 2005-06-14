@@ -44,9 +44,11 @@ public class ServerImpl extends ClientImpl implements Server {
 		this.servername = servername;
         File rmiFile = new File(System.getProperty("java.home") + File.separator + "bin" + File.separator + "rmiregistry.exe");
         File libDir = new File(System.getProperty("java.home") + File.separator + "lib");
+        File jarFile = new File("madn.jar");
         if(rmiFile.exists() && libDir.exists()) {
             try {
-                rmiProcess = Runtime.getRuntime().exec(rmiFile.getAbsolutePath() + " -J-classpath -J\"" + libDir.getAbsolutePath() + "\"");
+                String classpath = jarFile.exists() ? libDir.getAbsolutePath() + ";" + jarFile.getAbsolutePath() : libDir.getAbsolutePath();
+                rmiProcess = Runtime.getRuntime().exec(rmiFile.getAbsolutePath() + " -J-classpath -J\"" + classpath + "\"");
 				Naming.rebind(servername, this);
             } catch(IOException exc) {
                 if(rmiProcess != null)

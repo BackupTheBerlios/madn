@@ -64,12 +64,6 @@ public class MadnStart extends JFrame implements ActionListener {
 	final static String xmlPackage = "xml";
 	final static String xmlServer = "server.xml";
 	final static String xmlClient = "client.xml";
-	final static String guiPackage = "gui";
-	final static String[] guiFiles = {	"Server.class", "ServerImpl.class", "ServerImpl_Stub.class",
-	        							"Client.class", "ClientImpl.class", "ClientImpl_Stub.class",
-	        							"ClientListener.class"};
-	final static String modelPackage = "model";
-	final static String[] modelFiles = {"InvalidMoveException.class"};
 	
 	/**
 	 * Klasse MadnStart.
@@ -287,12 +281,6 @@ public class MadnStart extends JFrame implements ActionListener {
 	 */
 	private void restoreFiles() {
 		try {
-			for(int i = 0; i < modelFiles.length; i++) {
-			    Toolbox.restoreFile(modelPackage, modelFiles[i], getClass());
-			}
-			for(int i = 0; i < guiFiles.length; i++) {
-			    Toolbox.restoreFile(guiPackage, guiFiles[i], getClass());
-			}
 			Toolbox.restoreFile(xmlPackage, xmlClient, getClass());		// Die XML-Datei auslagern
 			Toolbox.restoreFile(xmlPackage, xmlServer, getClass());		// Die XML-Datei auslagern
 		} catch(Exception exc) {
