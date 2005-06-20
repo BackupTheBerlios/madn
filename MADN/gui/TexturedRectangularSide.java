@@ -132,9 +132,9 @@ public class TexturedRectangularSide extends Shape3D {
 		for (int i=0; i<4; i++){
 			for (int j = plane; j < (plane + 3); j++){
 				if (j == plane){
-					coordinates[i][j] = coordinates[i][j] + Math.signum(coordinates[i][j]) * Math.abs(gap);
-				}else if (Math.signum(coordinates[i][j%3]) != 0){
-					if (Math.signum(coordinates[i][plane]) == 1.0f)
+					coordinates[i][j] = coordinates[i][j] + (coordinates[i][j] < 0 ? -1.0f : 1.0f) * Math.abs(gap);
+				}else if (coordinates[i][j%3] != 0){
+					if (coordinates[i][plane] > 0.0f)
 						coordinates[i][j%3] = Math.abs(coordinates[i][j%3]) * TexturedRectangularSide.signums[i][1-((j+plane)%2)];
 					else{//Math.signum(coordinates[i][j]) == -1.0f
 						coordinates[i][j%3] = Math.abs(coordinates[i][j%3]) * TexturedRectangularSide.signums[3-i][1-((j+plane)%2)];
