@@ -60,7 +60,50 @@ public class InfoDialog extends JDialog implements ActionListener {
 		    	taRules.setBackground(this.getBackground());
 	    		taRules.setFont(new java.awt.Font("Dialog", 0, 11));
 		    	taRules.setEditable(false);
-		    	taRules.setText("");
+		    	taRules.setText(
+		    			"<Spielstart>\n"+
+		    			"Jeder Spieler besitzt vier gleichfarbige Spielkegel,\n" +
+						"die zu Beginn des Spiels auf ihren jeweiligen Start-\n" +
+						"bereichen in den Ecken des Spielbretts positioniert\n"+
+						"werden. Ausgehend vom Spieler mit der Spielfarbe Rot\n"+
+						"(=Serverhost) kommen im Uhrzeigersinn nacheinander\n" +
+						"immer wieder alle Spieler an die Reihe.\n\n" +
+						"<Spielablauf>\n" +
+						"Ist ein Spieler am Zug, muss er zunächst würfeln. Hat\n" +
+						"ein Spieler keine Spielkegel auf der Spielbahn und im\n"+
+						"Zielbereich oder kann ein Spieler, unabhängig vom Würfel-\n"+
+						"ergebnis, mit keinem seiner Spielkegel ziehen, so stehen\n"+
+						"dem Spieler maximal drei Würfelversuche, ansonsten nur\n"+
+						"ein einziger Würfelversuch zur Verfügung. Bei Würfeln der\n"+
+						"Augenzahl 6 muss der Spieler (wenn möglich) einen seiner\n"+
+						"Spielkegel aus dem Startbereich auf dem Startfeld ansetzen.\n"+
+						"Ansonsten, wenn alle Spielkegel bereits angesetzt wurden\n"+
+						"oder das Startfeld besetzt ist, kann mit einem anderen\n"+
+						"Spielkegel um die gewürfelte Augenzahl vorgerückt werden.\n"+
+						"Konnte ein Spieler nach Würfeln der Augenzahl 6 einen\n"+
+						"Spielkegel ansetzen oder einen Spielkegel vorrücken, ist\n"+
+						"er abermals am Zug. Würfelt ein Spieler eine Augenzahl\n"+
+						"ungleich 6, so darf er nur Spielkegel auf der Spielbahn\n"+
+						"oder im Zielbereich um diese Augenzahl vorrücken.\n"+
+						"Befindet sich auf dem Zielfeld ein Spielkegel der\n"+
+						"gleichen Farbe, so darf nicht gerückt werden. Ist das\n"+
+						"Zielfeld durch einen Kegel einer anderen Farbe besetzt,\n"+
+						"so darf vorgerückt werden. Der andersfarbige Spielkegel\n"+
+						"wird wieder in seinen Startbereich zurückgesetzt. Die ge-\n"+
+						"würfelte Augensumme darf auch dann nicht mit einem Spiel-\n"+
+						"kegel gerückt werden, wenn dadurch ein eigener Spielkegel\n"+
+						"im Zielbereich übersprungen wird. Ist das Startfeld durch\n"+
+						"einen eigenen Spielkegel besetzt und befinden sich noch\n"+
+						"Kegel im Startfeld, so muss wenn möglich zuerst das Start-\n"+
+						"feld geräumt werden.\n\n"+    
+						"<Spielende>\n"+
+						"Das Spiel ist beendet, wenn ein Spieler durch geschicktes\n"+
+						"Würfeln, als Erster alle seine Spielkegel entlang der\n"+
+						"Spielbahn in den Zielbereich (Mittelbahn) seiner Farbe bewegt\n"+
+						"hat."
+
+		    	);
+		    taRules.setCaretPosition(0);
 		    spRules.getViewport().add(taRules, null);
 	    	
 	    	lbControls.setText("Steuerung");

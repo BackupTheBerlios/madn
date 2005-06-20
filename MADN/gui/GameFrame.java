@@ -67,7 +67,7 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
   
   private int selectedPiece = -1;
   private JDesktopPane desktop = null;
-  private Server server = null;
+  //private Server server = null;
   
   private boolean animationRunning = false;
   

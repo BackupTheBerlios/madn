@@ -39,6 +39,8 @@ public class ClientImpl extends UnicastRemoteObject implements Client {
 	 * @throws Exception
 	 */
 	public ClientImpl(String serverhost, String servername, String nickName) throws RemoteException, Exception {
+		// Setze Nickname
+		this.nickName = nickName;
 		// Hole Server-RemoteObject
 		this.server = (Server)Naming.lookup("//" + serverhost + "/" + servername);
 		// Registriere Client bei Server
