@@ -22,6 +22,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.DateFormat;
@@ -226,9 +227,13 @@ public class GameFrame extends JFrame implements ActionListener, MouseListener, 
     
     	lbPlayer.setIcon(Toolbox.loadPlayerIcon(this.getClass()));
     	lbPlayer.setForeground(colors[clientColor]);
-    	lbPlayer.setText(nickname + " [" + ((client instanceof Server)?"Server":"Client") + "]");
+    	InetAddress adr;
+    	try {
+    	    adr = InetAddress.getLocalHost();
+    	} catch(Exception exc) { adr = null; }
+    	lbPlayer.setText(nickname + " [" + ((client instanceof Server)?"Server":"Client") + (adr == null ? "" : ": " + adr.getHostAddress()) + "]");
     	lbPlayer.setFont(new java.awt.Font("Dialog", 0, 11));
-       	tbStatus.add(lbPlayer);
+       	tbStatus.add(lbPlayer); 
     
     tbStatus.addSeparator();
        	

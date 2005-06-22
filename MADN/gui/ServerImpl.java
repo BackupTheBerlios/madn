@@ -9,7 +9,6 @@ package gui;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.Naming;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import model.BoardModel;
@@ -48,14 +47,12 @@ public class ServerImpl extends ClientImpl implements Server {
         	rmiFile = new File(System.getProperty("java.home") + File.separator + "bin" + File.separator + "rmiregistry.exe");
 		else
 		    rmiFile = new File(System.getProperty("java.home") + File.separator + "bin" + File.separator + "rmiregistry");
-		System.out.println(rmiFile.getAbsolutePath());
         File libDir = new File(System.getProperty("java.home") + File.separator + "lib");
         File jarFile = new File("madn.jar");
         if(rmiFile.exists() && libDir.exists()) {
             try {
                 String classpath = jarFile.exists() ? libDir.getAbsolutePath() + ";" + jarFile.getAbsolutePath() : libDir.getAbsolutePath();
                 rmiProcess = Runtime.getRuntime().exec(rmiFile.getAbsolutePath() + " -J-classpath -J\"" + classpath + "\"");
-//                System.setSecurityManager(new RMISecurityManager());
 				Naming.rebind(servername, this);
             } catch(IOException exc) {
                 if(rmiProcess != null)
